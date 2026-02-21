@@ -538,14 +538,14 @@ export default function ExcelMacroRunner() {
                       </CardHeader>
                       <CardContent>
                         <ResponsiveContainer width="100%" height={280}>
-                          <PieChart>
+                          <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
                             <Pie
                               data={processedData.resumen.categorias.map(
                                 (c) => ({ name: c.nombre, value: c.cantidad }),
                               )}
                               cx="50%"
                               cy="50%"
-                              outerRadius={100}
+                              outerRadius={85}
                               dataKey="value"
                               labelLine={false}
                               label={renderCustomLabel}
@@ -871,22 +871,24 @@ export default function ExcelMacroRunner() {
                               Top Solicitudes
                             </CardTitle>
                           </CardHeader>
-                          <CardContent className="h-60">
+                          <CardContent className="h-60 pt-6">
                             <ResponsiveContainer width="100%" height="100%">
-                              <PieChart>
+                              <PieChart margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
                                 <Pie
                                   data={
                                     processedData.arbolEfectividad.solicitudes
                                   }
                                   cx="50%"
                                   cy="50%"
-                                  outerRadius={80}
+                                  outerRadius={60}
                                   dataKey="cantidad"
                                   nameKey="nombre"
                                   labelLine={true}
-                                  label={({ name, percent }) =>
-                                    `${name}: ${(percent * 100).toFixed(0)}%`
-                                  }
+                                  label={({ name, percent }) => {
+                                    // Truncar nombres excesivamente largos (común en 'Ahorros/ Productos de captacion')
+                                    const shortName = name.length > 25 ? name.substring(0, 25) + "..." : name;
+                                    return `${shortName}: ${(percent * 100).toFixed(0)}%`;
+                                  }}
                                 >
                                   {processedData.arbolEfectividad.solicitudes.map(
                                     (_, index) => (
@@ -971,9 +973,9 @@ export default function ExcelMacroRunner() {
                         </Table>
 
                         {/* Pie Chart with visible labels */}
-                        <CardContent className="p-4 bg-slate-50">
+                        <CardContent className="p-4 bg-slate-50 pt-8">
                           <ResponsiveContainer width="100%" height={180}>
-                            <PieChart>
+                            <PieChart margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
                               <Pie
                                 data={tramite.temas
                                   .slice(0, 5)
@@ -983,14 +985,14 @@ export default function ExcelMacroRunner() {
                                   }))}
                                 cx="50%"
                                 cy="50%"
-                                outerRadius={60}
+                                outerRadius={50}
                                 dataKey="value"
                                 labelLine={true}
-                                label={({ name, percent }) =>
-                                  percent > 0.1
-                                    ? `${(percent * 100).toFixed(0)}%`
-                                    : ""
-                                }
+                                label={({ name, percent }) => {
+                                  if (percent < 0.1) return '';
+                                  const shortName = name.length > 20 ? name.substring(0, 20) + "..." : name;
+                                  return `${shortName}: ${(percent * 100).toFixed(0)}%`;
+                                }}
                               >
                                 {tramite.temas.slice(0, 5).map((_, index) => (
                                   <Cell
