@@ -14,7 +14,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-// Eliminado 'recharts' para migración a UI Plana Compatible con PDF
+
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Label,
+  Legend,
+} from "recharts";
 
 import {
   FileSpreadsheet,
@@ -519,31 +533,50 @@ export default function ExcelMacroRunner() {
 
                     {/* Distribucion por Categoria */}
                     <Card className="shadow-md border-slate-200">
-                      <CardHeader className="pb-2 border-b border-slate-100">
+                      <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-semibold text-slate-700 text-center">
                           Distribucion por Categoria
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="pt-4 h-[280px] overflow-y-auto pr-2">
-                        <div className="space-y-4">
-                          {processedData.resumen.categorias.map((cat, index) => (
-                            <div key={index} className="space-y-1.5">
-                              <div className="flex justify-between items-center text-sm">
-                                <span className="font-medium text-slate-700 truncate pr-2" title={cat.nombre}>{cat.nombre}</span>
-                                <span className="text-slate-500 font-semibold text-xs">{(cat.porcentaje * 100).toFixed(1)}% ({cat.cantidad})</span>
-                              </div>
-                              <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                                <div 
-                                  className="h-2.5 rounded-full shadow-sm" 
-                                  style={{ 
-                                    width: `${cat.porcentaje * 100}%`,
-                                    backgroundColor: CHART_COLORS[index % CHART_COLORS.length]
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={280}>
+                          <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                            <Pie
+                              data={processedData.resumen.categorias.map(
+                                (c) => ({ name: c.nombre, value: c.cantidad }),
+                              )}
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={85}
+                              dataKey="value"
+                              isAnimationActive={false}
+                              stroke="none"
+                              labelLine={false}
+                              label={renderCustomLabel}
+                            >
+                              {processedData.resumen.categorias.map(
+                                (_, index) => (
+                                  <Cell
+                                    key={`cell-${index}`}
+                                    fill={
+                                      CHART_COLORS[index % CHART_COLORS.length]
+                                    }
+                                  />
+                                ),
+                              )}
+                            </Pie>
+                            <Tooltip
+                              formatter={(value: number) =>
+                                value.toLocaleString()
+                              }
+                              contentStyle={{
+                                borderRadius: "8px",
+                                border: "1px solid #e2e8f0",
+                              }}
+                            />
+                            <Legend verticalAlign="bottom" height={36} />
+                          </PieChart>
+                        </ResponsiveContainer>
                       </CardContent>
                     </Card>
                   </div>
@@ -754,37 +787,54 @@ export default function ExcelMacroRunner() {
                     {processedData.arbolEfectividad.solicitudes &&
                       processedData.arbolEfectividad.solicitudes.length > 0 && (
                         <Card className="shadow-md border-slate-200">
-                          <CardHeader className="pb-2 border-b border-slate-100">
+                          <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-semibold text-slate-700">
                               Top Solicitudes
                             </CardTitle>
                           </CardHeader>
-                          <CardContent className="pt-4 h-60 overflow-y-auto pr-2">
-                            <div className="space-y-4">
-                              {processedData.arbolEfectividad.solicitudes.map((sol, index) => {
-                                const maxCant = processedData.arbolEfectividad.solicitudes.reduce((max, s) => Math.max(max, s.cantidad), 1);
-                                const pct = (sol.cantidad / maxCant) * 100;
-                                const tot = processedData.resumen.total;
-                                const totPct = tot > 0 ? (sol.cantidad / tot) * 100 : 0;
-                                return (
-                                  <div key={index} className="space-y-1.5">
-                                    <div className="flex justify-between items-center text-sm">
-                                      <span className="font-medium text-slate-700 truncate pr-2" title={sol.nombre}>{sol.nombre}</span>
-                                      <span className="text-slate-500 font-semibold text-xs">{totPct.toFixed(1)}% ({sol.cantidad})</span>
-                                    </div>
-                                    <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                                      <div 
-                                        className="h-2.5 rounded-full shadow-sm" 
-                                        style={{ 
-                                          width: `${pct}%`,
-                                          backgroundColor: CHART_COLORS[index % CHART_COLORS.length]
-                                        }}
+                          <CardContent className="h-60 pt-6">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <PieChart margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
+                                <Pie
+                                  data={
+                                    processedData.arbolEfectividad.solicitudes
+                                  }
+                                  cx="50%"
+                                  cy="50%"
+                                  outerRadius={60}
+                                  dataKey="cantidad"
+                                  nameKey="nombre"
+                                  isAnimationActive={false}
+                                  stroke="none"
+                                  labelLine={true}
+                                  label={({ name, percent }) => {
+                                    // Truncar nombres excesivamente largos
+                                    const shortName = name.length > 25 ? name.substring(0, 25) + "..." : name;
+                                    return `${shortName}: ${(percent * 100).toFixed(0)}%`;
+                                  }}
+                                >
+                                  {processedData.arbolEfectividad.solicitudes.map(
+                                    (_, index) => (
+                                      <Cell
+                                        key={`cell-${index}`}
+                                        fill={
+                                          CHART_COLORS[
+                                            index % CHART_COLORS.length
+                                          ]
+                                        }
                                       />
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
+                                    ),
+                                  )}
+                                </Pie>
+                                <Tooltip
+                                  formatter={(value: number) =>
+                                    value.toLocaleString()
+                                  }
+                                  contentStyle={{ borderRadius: "8px" }}
+                                />
+                                <Legend verticalAlign="bottom" height={36} />
+                              </PieChart>
+                            </ResponsiveContainer>
                           </CardContent>
                         </Card>
                       )}

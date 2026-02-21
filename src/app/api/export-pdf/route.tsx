@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import React from "react";
-import { Document, Page, Text, View, StyleSheet, pdf } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, pdf, Svg, Path, Circle } from "@react-pdf/renderer";
 
 interface ProcessedData {
   resumen: {
@@ -27,6 +27,82 @@ const AZUL_REY = "#002060";
 const NARANJA = "#ED7D31";
 const WHITE = "#FFFFFF";
 const GRIS_CLARO = "#F2F2F2";
+const CHART_COLORS = [
+  "#002060", "#003399", "#0044CC", "#3366FF", "#668CFF",
+  "#FF6D00", "#FF8C33", "#FFA666", "#FFC099", "#FFD9CC"
+];
+
+// Helper para convertir coordenadas polares a cartesianas en SVG
+function polarToCartesian(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
+  const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+  return {
+    x: centerX + (radius * Math.cos(angleInRadians)),
+    y: centerY + (radius * Math.sin(angleInRadians))
+  };
+}
+
+// Helper para calcular el path de un segmento (slice) de pastel
+function describeArc(x: number, y: number, radius: number, startAngle: number, endAngle: number){
+    const start = polarToCartesian(x, y, radius, endAngle);
+    const end = polarToCartesian(x, y, radius, startAngle);
+    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+    return [
+        "M", start.x, start.y, 
+        "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y,
+        "L", x, y,
+        "Z"
+    ].join(" ");
+}
+
+// Componente PdfPieChart
+const PdfPieChart = ({ data, size = 110 }: { data: { name: string; value: number }[], size?: number }) => {
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+  let currentAngle = 0;
+  
+  if (total === 0) return <View style={{ width: size, height: size, backgroundColor: '#eee', borderRadius: size/2 }} />;
+
+  const radius = size / 2;
+  const center = size / 2;
+
+  return (
+    <View style={{ width: size, height: size }}>
+      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        {data.map((item, index) => {
+          if (item.value === total) {
+            return <Circle key={index} cx={center} cy={center} r={radius} fill={CHART_COLORS[index % CHART_COLORS.length]} />;
+          }
+          if (item.value === 0) return null;
+          const sliceAngle = (item.value / total) * 360;
+          const endAngle = currentAngle + sliceAngle;
+          const path = describeArc(center, center, radius, currentAngle, endAngle);
+          const color = CHART_COLORS[index % CHART_COLORS.length];
+          currentAngle = endAngle;
+          return <Path key={index} d={path} fill={color} />;
+        })}
+      </Svg>
+    </View>
+  );
+};
+
+// Componente Leyenda de Grafico de Pastel
+const PdfLegend = ({ data }: { data: { name: string; value: number; color?: string }[] }) => {
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+  return (
+    <View style={{ marginLeft: 15, flex: 1, justifyContent: 'center' }}>
+      {data.map((item, index) => {
+        const pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : "0.0";
+        return (
+          <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+            <View style={{ width: 8, height: 8, backgroundColor: item.color || CHART_COLORS[index % CHART_COLORS.length], marginRight: 4 }} />
+            <Text style={{ fontSize: 6, color: '#333', flexShrink: 1 }}>
+              {item.name.length > 30 ? item.name.substring(0, 30) + '...' : item.name} ({pct}%)
+            </Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   page: {
@@ -42,7 +118,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 14,
     fontWeight: "bold",
-    color: AZUL_REY,
     textAlign: "center",
     padding: 8,
     backgroundColor: AZUL_REY,
@@ -172,6 +247,13 @@ function ResumenPage({ data, macroId }: { data: ProcessedData; macroId: string }
         <View style={styles.colHalf}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>DATOS GENERALES TIPIFICACION</Text>
+            
+            {/* Seccion de Grafico y Leyenda (PDF Safe) */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8, paddingHorizontal: 10 }}>
+              <PdfPieChart data={data.resumen.categorias.map(c => ({ name: c.nombre, value: c.cantidad }))} size={100} />
+              <PdfLegend data={data.resumen.categorias.map(c => ({ name: c.nombre, value: c.cantidad }))} />
+            </View>
+
             <View style={styles.table}>
               <View style={styles.tableHeader}>
                 <Text style={[styles.tableHeaderCell, styles.col1]}>Categoria</Text>
@@ -198,6 +280,13 @@ function ResumenPage({ data, macroId }: { data: ProcessedData; macroId: string }
         <View style={styles.colHalf}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>DETALLE DE TIPIFICACION {macroId.toUpperCase()}</Text>
+
+            {/* Grafico Señales */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8, paddingHorizontal: 10 }}>
+               <PdfPieChart data={data.arbolEfectividad.señales.slice(0, 7).map(s => ({ name: s.nombre, value: s.cantidad }))} size={100} />
+               <PdfLegend data={data.arbolEfectividad.señales.slice(0, 7).map(s => ({ name: s.nombre, value: s.cantidad }))} />
+            </View>
+
             <View style={styles.table}>
               <View style={styles.tableHeader}>
                 <Text style={[styles.tableHeaderCell, styles.col1]}>Senal</Text>
@@ -326,6 +415,13 @@ function GraficosPage({ data, macroId }: { data: ProcessedData; macroId: string 
           {data.arbolEfectividad.solicitudes && data.arbolEfectividad.solicitudes.length > 0 ? (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>TOP SOLICITUDES</Text>
+
+              {/* Grafico Solicitudes */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8, paddingHorizontal: 5 }}>
+                 <PdfPieChart data={data.arbolEfectividad.solicitudes.slice(0, 5).map(s => ({ name: s.nombre, value: s.cantidad }))} size={90} />
+                 <PdfLegend data={data.arbolEfectividad.solicitudes.slice(0, 5).map(s => ({ name: s.nombre, value: s.cantidad }))} />
+              </View>
+
               <View style={styles.table}>
                 <View style={styles.tableHeader}>
                   <Text style={[styles.tableHeaderCell, { width: "60%" }]}>Solicitud</Text>
