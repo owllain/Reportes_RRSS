@@ -14,20 +14,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Label,
-  Legend,
-} from "recharts";
+// Eliminado 'recharts' para migración a UI Plana Compatible con PDF
+
 import {
   FileSpreadsheet,
   Upload,
@@ -529,52 +517,33 @@ export default function ExcelMacroRunner() {
                       </Table>
                     </div>
 
-                    {/* Pie Chart */}
+                    {/* Distribucion por Categoria */}
                     <Card className="shadow-md border-slate-200">
-                      <CardHeader className="pb-2">
+                      <CardHeader className="pb-2 border-b border-slate-100">
                         <CardTitle className="text-sm font-semibold text-slate-700 text-center">
                           Distribucion por Categoria
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <ResponsiveContainer width="100%" height={280}>
-                          <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
-                            <Pie
-                              data={processedData.resumen.categorias.map(
-                                (c) => ({ name: c.nombre, value: c.cantidad }),
-                              )}
-                              cx="50%"
-                              cy="50%"
-                              outerRadius={85}
-                              dataKey="value"
-                              labelLine={false}
-                              label={renderCustomLabel}
-                            >
-                              {processedData.resumen.categorias.map(
-                                (_, index) => (
-                                  <Cell
-                                    key={`cell-${index}`}
-                                    fill={
-                                      CHART_COLORS[index % CHART_COLORS.length]
-                                    }
-                                    stroke="white"
-                                    strokeWidth={2}
-                                  />
-                                ),
-                              )}
-                            </Pie>
-                            <Tooltip
-                              formatter={(value: number) =>
-                                value.toLocaleString()
-                              }
-                              contentStyle={{
-                                borderRadius: "8px",
-                                border: "1px solid #e2e8f0",
-                              }}
-                            />
-                            <Legend verticalAlign="bottom" height={36} />
-                          </PieChart>
-                        </ResponsiveContainer>
+                      <CardContent className="pt-4 h-[280px] overflow-y-auto pr-2">
+                        <div className="space-y-4">
+                          {processedData.resumen.categorias.map((cat, index) => (
+                            <div key={index} className="space-y-1.5">
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="font-medium text-slate-700 truncate pr-2" title={cat.nombre}>{cat.nombre}</span>
+                                <span className="text-slate-500 font-semibold text-xs">{(cat.porcentaje * 100).toFixed(1)}% ({cat.cantidad})</span>
+                              </div>
+                              <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                                <div 
+                                  className="h-2.5 rounded-full shadow-sm" 
+                                  style={{ 
+                                    width: `${cat.porcentaje * 100}%`,
+                                    backgroundColor: CHART_COLORS[index % CHART_COLORS.length]
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </CardContent>
                     </Card>
                   </div>
@@ -642,168 +611,105 @@ export default function ExcelMacroRunner() {
                     {/* Top Tramites */}
                     {processedData.arbolEfectividad.topTramites.length > 0 && (
                       <Card className="shadow-md border-slate-200">
-                        <CardHeader className="pb-2">
+                        <CardHeader className="pb-2 border-b border-slate-100">
                           <CardTitle className="text-sm font-semibold text-slate-700">
                             Top Tramites
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="h-52">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <BarChart
-                              data={processedData.arbolEfectividad.topTramites}
-                              margin={{
-                                top: 20,
-                                right: 10,
-                                left: 0,
-                                bottom: 5,
-                              }}
-                            >
-                              <CartesianGrid
-                                strokeDasharray="3 3"
-                                stroke="#e2e8f0"
-                              />
-                              <XAxis
-                                dataKey="nombre"
-                                tick={{ fontSize: 9, fill: "#475569" }}
-                                angle={-20}
-                                textAnchor="end"
-                                height={50}
-                              />
-                              <YAxis tick={{ fontSize: 10, fill: "#475569" }} />
-                              <Tooltip
-                                formatter={(value: number) => [
-                                  value.toLocaleString(),
-                                  "Cantidad",
-                                ]}
-                                contentStyle={{ borderRadius: "8px" }}
-                              />
-                              <Bar
-                                dataKey="cantidad"
-                                fill={CORPORATE_COLORS.highlight}
-                                radius={[4, 4, 0, 0]}
-                              >
-                                <Label
-                                  dataKey="cantidad"
-                                  position="top"
-                                  fontSize={10}
-                                  fill="#37474F"
-                                  fontWeight="bold"
-                                />
-                              </Bar>
-                            </BarChart>
-                          </ResponsiveContainer>
+                        <CardContent className="pt-4 h-52 overflow-y-auto pr-2">
+                          <div className="space-y-3">
+                            {processedData.arbolEfectividad.topTramites.map((tramite, index) => {
+                              const maxCant = processedData.arbolEfectividad.topTramites[0]?.cantidad || 1;
+                              const pct = (tramite.cantidad / maxCant) * 100;
+                              return (
+                                <div key={index} className="space-y-1">
+                                  <div className="flex justify-between items-center text-xs">
+                                    <span className="font-medium text-slate-700 truncate pr-2" title={tramite.nombre}>{tramite.nombre}</span>
+                                    <span className="text-slate-500 font-semibold">{tramite.cantidad.toLocaleString()}</span>
+                                  </div>
+                                  <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                    <div 
+                                      className="h-1.5 rounded-full" 
+                                      style={{ 
+                                        width: `${pct}%`,
+                                        backgroundColor: CORPORATE_COLORS.highlight
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </CardContent>
                       </Card>
                     )}
 
                     {/* Interacciones por Dia */}
                     <Card className="shadow-md border-slate-200">
-                      <CardHeader className="pb-2">
+                      <CardHeader className="pb-2 border-b border-slate-100">
                         <CardTitle className="text-sm font-semibold text-slate-700">
                           Interacciones por Dia
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="h-52">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={
-                              processedData.arbolEfectividad.interaccionesDia
-                            }
-                            margin={{ top: 20, right: 10, left: 0, bottom: 5 }}
-                          >
-                            <CartesianGrid
-                              strokeDasharray="3 3"
-                              stroke="#e2e8f0"
-                            />
-                            <XAxis
-                              dataKey="dia"
-                              tick={{ fontSize: 10, fill: "#475569" }}
-                            />
-                            <YAxis tick={{ fontSize: 10, fill: "#475569" }} />
-                            <Tooltip
-                              formatter={(value: number) => [
-                                value.toLocaleString(),
-                                "Cantidad",
-                              ]}
-                              contentStyle={{ borderRadius: "8px" }}
-                            />
-                            <Bar
-                              dataKey="cantidad"
-                              fill={CORPORATE_COLORS.primary}
-                              radius={[4, 4, 0, 0]}
-                            >
-                              <Label
-                                dataKey="cantidad"
-                                position="top"
-                                fontSize={10}
-                                fill="#37474F"
-                                fontWeight="bold"
-                              />
-                            </Bar>
-                          </BarChart>
-                        </ResponsiveContainer>
+                      <CardContent className="pt-4 h-52 overflow-y-auto pr-2">
+                        <div className="space-y-3">
+                          {processedData.arbolEfectividad.interaccionesDia.map((diaInfo, index) => {
+                            const maxCant = Math.max(...processedData.arbolEfectividad.interaccionesDia.map(d => d.cantidad), 1);
+                            const pct = (diaInfo.cantidad / maxCant) * 100;
+                            return (
+                              <div key={index} className="space-y-1">
+                                <div className="flex justify-between items-center text-xs">
+                                  <span className="font-medium text-slate-700">{diaInfo.dia}</span>
+                                  <span className="text-slate-500 font-semibold">{diaInfo.cantidad.toLocaleString()}</span>
+                                </div>
+                                <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                  <div 
+                                    className="h-1.5 rounded-full" 
+                                    style={{ 
+                                      width: `${pct}%`,
+                                      backgroundColor: CORPORATE_COLORS.primary
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </CardContent>
                     </Card>
 
                     {/* Horas Prime */}
                     {processedData.arbolEfectividad.horasPrime.length > 0 && (
                       <Card className="shadow-md border-slate-200">
-                        <CardHeader className="pb-2">
+                        <CardHeader className="pb-2 border-b border-slate-100">
                           <CardTitle className="text-sm font-semibold text-slate-700">
                             Horas Prime (Top 10)
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="h-52">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <BarChart
-                              data={processedData.arbolEfectividad.horasPrime.slice(
-                                0,
-                                10,
-                              )}
-                              layout="vertical"
-                              margin={{
-                                top: 5,
-                                right: 30,
-                                left: 10,
-                                bottom: 5,
-                              }}
-                            >
-                              <CartesianGrid
-                                strokeDasharray="3 3"
-                                stroke="#e2e8f0"
-                              />
-                              <XAxis
-                                type="number"
-                                tick={{ fontSize: 10, fill: "#475569" }}
-                              />
-                              <YAxis
-                                dataKey="hora"
-                                type="category"
-                                width={50}
-                                tick={{ fontSize: 10, fill: "#475569" }}
-                              />
-                              <Tooltip
-                                formatter={(value: number) => [
-                                  value.toLocaleString(),
-                                  "Cantidad",
-                                ]}
-                                contentStyle={{ borderRadius: "8px" }}
-                              />
-                              <Bar
-                                dataKey="cantidad"
-                                fill={CORPORATE_COLORS.accent}
-                                radius={[0, 4, 4, 0]}
-                              >
-                                <Label
-                                  dataKey="cantidad"
-                                  position="right"
-                                  fontSize={10}
-                                  fill="#37474F"
-                                  fontWeight="bold"
-                                />
-                              </Bar>
-                            </BarChart>
-                          </ResponsiveContainer>
+                        <CardContent className="pt-4 h-52 overflow-y-auto pr-2">
+                          <div className="space-y-3">
+                            {processedData.arbolEfectividad.horasPrime.slice(0, 10).map((hora, index) => {
+                              const maxCant = processedData.arbolEfectividad.horasPrime[0]?.cantidad || 1;
+                              const pct = (hora.cantidad / maxCant) * 100;
+                              return (
+                                <div key={index} className="space-y-1">
+                                  <div className="flex justify-between items-center text-xs">
+                                    <span className="font-medium text-slate-700">{hora.hora} hs</span>
+                                    <span className="text-slate-500 font-semibold">{hora.cantidad.toLocaleString()}</span>
+                                  </div>
+                                  <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                    <div 
+                                      className="h-1.5 rounded-full" 
+                                      style={{ 
+                                        width: `${pct}%`,
+                                        backgroundColor: CORPORATE_COLORS.accent
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </CardContent>
                       </Card>
                     )}
@@ -811,53 +717,35 @@ export default function ExcelMacroRunner() {
                     {/* Calificacion */}
                     {processedData.arbolEfectividad.calificacion.length > 0 && (
                       <Card className="shadow-md border-slate-200">
-                        <CardHeader className="pb-2">
+                        <CardHeader className="pb-2 border-b border-slate-100">
                           <CardTitle className="text-sm font-semibold text-slate-700">
                             Calificacion de Servicio
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="h-52">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <BarChart
-                              data={processedData.arbolEfectividad.calificacion}
-                              margin={{
-                                top: 20,
-                                right: 10,
-                                left: 0,
-                                bottom: 5,
-                              }}
-                            >
-                              <CartesianGrid
-                                strokeDasharray="3 3"
-                                stroke="#e2e8f0"
-                              />
-                              <XAxis
-                                dataKey="nombre"
-                                tick={{ fontSize: 10, fill: "#475569" }}
-                              />
-                              <YAxis tick={{ fontSize: 10, fill: "#475569" }} />
-                              <Tooltip
-                                formatter={(value: number) => [
-                                  value.toLocaleString(),
-                                  "Cantidad",
-                                ]}
-                                contentStyle={{ borderRadius: "8px" }}
-                              />
-                              <Bar
-                                dataKey="cantidad"
-                                fill={CORPORATE_COLORS.highlight}
-                                radius={[4, 4, 0, 0]}
-                              >
-                                <Label
-                                  dataKey="cantidad"
-                                  position="top"
-                                  fontSize={10}
-                                  fill="#37474F"
-                                  fontWeight="bold"
-                                />
-                              </Bar>
-                            </BarChart>
-                          </ResponsiveContainer>
+                        <CardContent className="pt-4 h-52 overflow-y-auto pr-2">
+                          <div className="space-y-3">
+                            {processedData.arbolEfectividad.calificacion.map((calif, index) => {
+                              const maxCant = processedData.arbolEfectividad.calificacion.reduce((max, c) => Math.max(max, c.cantidad), 1);
+                              const pct = (calif.cantidad / maxCant) * 100;
+                              return (
+                                <div key={index} className="space-y-1">
+                                  <div className="flex justify-between items-center text-xs">
+                                    <span className="font-medium text-slate-700 truncate pr-2" title={calif.nombre}>{calif.nombre}</span>
+                                    <span className="text-slate-500 font-semibold">{calif.cantidad.toLocaleString()}</span>
+                                  </div>
+                                  <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                    <div 
+                                      className="h-1.5 rounded-full" 
+                                      style={{ 
+                                        width: `${pct}%`,
+                                        backgroundColor: CORPORATE_COLORS.highlight
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </CardContent>
                       </Card>
                     )}
@@ -866,54 +754,37 @@ export default function ExcelMacroRunner() {
                     {processedData.arbolEfectividad.solicitudes &&
                       processedData.arbolEfectividad.solicitudes.length > 0 && (
                         <Card className="shadow-md border-slate-200">
-                          <CardHeader className="pb-2">
+                          <CardHeader className="pb-2 border-b border-slate-100">
                             <CardTitle className="text-sm font-semibold text-slate-700">
                               Top Solicitudes
                             </CardTitle>
                           </CardHeader>
-                          <CardContent className="h-60 pt-6">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <PieChart margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
-                                <Pie
-                                  data={
-                                    processedData.arbolEfectividad.solicitudes
-                                  }
-                                  cx="50%"
-                                  cy="50%"
-                                  outerRadius={60}
-                                  dataKey="cantidad"
-                                  nameKey="nombre"
-                                  labelLine={true}
-                                  label={({ name, percent }) => {
-                                    // Truncar nombres excesivamente largos (común en 'Ahorros/ Productos de captacion')
-                                    const shortName = name.length > 25 ? name.substring(0, 25) + "..." : name;
-                                    return `${shortName}: ${(percent * 100).toFixed(0)}%`;
-                                  }}
-                                >
-                                  {processedData.arbolEfectividad.solicitudes.map(
-                                    (_, index) => (
-                                      <Cell
-                                        key={`cell-${index}`}
-                                        fill={
-                                          CHART_COLORS[
-                                            index % CHART_COLORS.length
-                                          ]
-                                        }
-                                        stroke="white"
-                                        strokeWidth={2}
+                          <CardContent className="pt-4 h-60 overflow-y-auto pr-2">
+                            <div className="space-y-4">
+                              {processedData.arbolEfectividad.solicitudes.map((sol, index) => {
+                                const maxCant = processedData.arbolEfectividad.solicitudes.reduce((max, s) => Math.max(max, s.cantidad), 1);
+                                const pct = (sol.cantidad / maxCant) * 100;
+                                const tot = processedData.resumen.total;
+                                const totPct = tot > 0 ? (sol.cantidad / tot) * 100 : 0;
+                                return (
+                                  <div key={index} className="space-y-1.5">
+                                    <div className="flex justify-between items-center text-sm">
+                                      <span className="font-medium text-slate-700 truncate pr-2" title={sol.nombre}>{sol.nombre}</span>
+                                      <span className="text-slate-500 font-semibold text-xs">{totPct.toFixed(1)}% ({sol.cantidad})</span>
+                                    </div>
+                                    <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                                      <div 
+                                        className="h-2.5 rounded-full shadow-sm" 
+                                        style={{ 
+                                          width: `${pct}%`,
+                                          backgroundColor: CHART_COLORS[index % CHART_COLORS.length]
+                                        }}
                                       />
-                                    ),
-                                  )}
-                                </Pie>
-                                <Tooltip
-                                  formatter={(value: number) =>
-                                    value.toLocaleString()
-                                  }
-                                  contentStyle={{ borderRadius: "8px" }}
-                                />
-                                <Legend verticalAlign="bottom" height={36} />
-                              </PieChart>
-                            </ResponsiveContainer>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </CardContent>
                         </Card>
                       )}
@@ -972,56 +843,31 @@ export default function ExcelMacroRunner() {
                           </TableBody>
                         </Table>
 
-                        {/* Pie Chart with visible labels */}
-                        <CardContent className="p-4 bg-slate-50 pt-8">
-                          <ResponsiveContainer width="100%" height={180}>
-                            <PieChart margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
-                              <Pie
-                                data={tramite.temas
-                                  .slice(0, 5)
-                                  .map((t) => ({
-                                    name: t.tema,
-                                    value: t.cantidad,
-                                  }))}
-                                cx="50%"
-                                cy="50%"
-                                outerRadius={50}
-                                dataKey="value"
-                                labelLine={true}
-                                label={({ name, percent }) => {
-                                  if (percent < 0.1) return '';
-                                  const shortName = name.length > 20 ? name.substring(0, 20) + "..." : name;
-                                  return `${shortName}: ${(percent * 100).toFixed(0)}%`;
-                                }}
-                              >
-                                {tramite.temas.slice(0, 5).map((_, index) => (
-                                  <Cell
-                                    key={`cell-${index}`}
-                                    fill={
-                                      CHART_COLORS[index % CHART_COLORS.length]
-                                    }
-                                    stroke="white"
-                                    strokeWidth={2}
-                                  />
-                                ))}
-                              </Pie>
-                              <Tooltip
-                                formatter={(value: number) =>
-                                  value.toLocaleString()
-                                }
-                                contentStyle={{ borderRadius: "8px" }}
-                              />
-                              <Legend
-                                verticalAlign="bottom"
-                                height={36}
-                                formatter={(value: string) =>
-                                  value.length > 15
-                                    ? value.substring(0, 15) + "..."
-                                    : value
-                                }
-                              />
-                            </PieChart>
-                          </ResponsiveContainer>
+                        {/* Progreso UI (PDF Safe) */}
+                        <CardContent className="p-4 bg-slate-50 pt-4 h-[180px] overflow-y-auto">
+                          <div className="space-y-3">
+                            {tramite.temas.slice(0, 5).map((t, index) => {
+                              const maxCant = tramite.temas[0]?.cantidad || 1;
+                              const pct = (t.cantidad / maxCant) * 100;
+                              return (
+                                <div key={index} className="space-y-1">
+                                  <div className="flex justify-between items-center text-xs">
+                                    <span className="font-medium text-slate-700 truncate pr-2" title={t.tema}>{t.tema}</span>
+                                    <span className="text-slate-500 font-semibold">{t.cantidad.toLocaleString()}</span>
+                                  </div>
+                                  <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                                    <div 
+                                      className="h-1.5 rounded-full" 
+                                      style={{ 
+                                        width: `${pct}%`,
+                                        backgroundColor: CHART_COLORS[index % CHART_COLORS.length]
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </CardContent>
                       </Card>
                     ))}
