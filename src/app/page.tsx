@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,26 +47,7 @@ import {
   Download,
 } from "lucide-react";
 
-// Types
-interface ProcessedData {
-  resumen: {
-    categorias: { nombre: string; cantidad: number; porcentaje: number }[];
-    total: number;
-  };
-  arbolEfectividad: {
-    señales: { nombre: string; cantidad: number; porcentaje: number }[];
-    topTramites: { nombre: string; cantidad: number }[];
-    interaccionesDia: { dia: string; cantidad: number }[];
-    horasPrime: { hora: string; cantidad: number }[];
-    calificacion: { nombre: string; cantidad: number }[];
-    solicitudes?: { nombre: string; cantidad: number }[];
-  };
-  subTramites: {
-    nombre: string;
-    temas: { tema: string; cantidad: number }[];
-    total: number;
-  }[];
-}
+import { processExcelFileLocal, MACRO_CONFIGS, ProcessedData } from "@/lib/excel-processor";
 
 interface MacroConfig {
   id: string;
@@ -184,48 +165,19 @@ export default function ExcelMacroRunner() {
     setProgress(0);
     setError(null);
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("macroId", selectedMacro);
-
     try {
-      setProgress(20);
-
-      const response = await fetch("/api/process-macro", {
-        method: "POST",
-        body: formData,
-      });
-
-      setProgress(60);
-
-      if (!response.ok) {
-        let errorMsg = "Error al procesar el archivo";
-        try {
-          const errData = await response.json();
-          if (errData.error) errorMsg = errData.error;
-          else if (response.status === 413)
-            errorMsg =
-              "El archivo es demasiado grande (límite de Vercel alcanzado).";
-        } catch (_) {
-          if (response.status === 413)
-            errorMsg =
-              "El archivo es demasiado grande (límite de Vercel alcanzado).";
-        }
-        throw new Error(errorMsg);
-      }
-
-      const data = await response.json();
-      setProgress(90);
+      // Process file directly in the browser using our local utility
+      const data = await processExcelFileLocal(file, selectedMacro, setProgress);
 
       setProcessedData(data);
-      setProgress(100);
       setActiveTab("resumen");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
+      setError(err instanceof Error ? err.message : "Error desconocido al procesar el archivo");
+      setProgress(0);
     } finally {
       setIsProcessing(false);
     }
-  }, [file, selectedMacro]);
+  }, [file, selectedMacro, setProgress]);
 
   const exportToPDF = useCallback(async () => {
     if (!processedData || !selectedMacro) return;
