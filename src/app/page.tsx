@@ -257,7 +257,7 @@ export default function ExcelMacroRunner() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-slate-800 tracking-tight">
-                Macro Runner Pro
+                Reportes y arboles de efectividad RRSS
               </h1>
               <p className="text-xs text-slate-500">
                 Procesador de Reportes por Canal
@@ -340,9 +340,9 @@ export default function ExcelMacroRunner() {
         <section>
           <h2 className="text-sm font-semibold text-slate-600 mb-3 flex items-center gap-2 px-1">
             <LayoutGrid className="w-4 h-4 text-[#0D4F8B]" />
-            Seleccionar Macro a Ejecutar
+            Seleccionar Reporte a Procesar
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
             {MACROS.map((macro) => (
               <Card
                 key={macro.id}
@@ -353,13 +353,13 @@ export default function ExcelMacroRunner() {
                 }`}
                 onClick={() => setSelectedMacro(macro.id)}
               >
-                <CardContent className="p-5 flex flex-col items-center gap-3">
+                <CardContent className="p-3 flex flex-col items-center gap-2">
                   <div
-                    className={`p-4 rounded-xl bg-gradient-to-br ${macro.gradient} text-white shadow-md`}
+                    className={`p-2.5 rounded-lg bg-gradient-to-br ${macro.gradient} text-white shadow-md`}
                   >
                     {macro.icon}
                   </div>
-                  <span className={`font-semibold ${macro.color}`}>
+                  <span className={`text-sm font-semibold ${macro.color}`}>
                     {macro.name}
                   </span>
                   {selectedMacro === macro.id && (
@@ -591,7 +591,7 @@ export default function ExcelMacroRunner() {
                         DETALLE DE TIPIFICACION{" "}
                         {selectedMacroConfig?.name?.toUpperCase()}
                       </div>
-                      <div className="max-h-[500px] overflow-y-auto">
+                      <div className="h-auto overflow-visible mb-6">
                         <Table>
                           <TableHeader>
                             <TableRow className="bg-[#FF6D00] hover:bg-[#FF6D00] sticky top-0">
@@ -649,7 +649,7 @@ export default function ExcelMacroRunner() {
                             Top Tramites
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="pt-4 h-52 overflow-y-auto pr-2">
+                        <CardContent className="pt-4 h-auto min-h-[14rem] pb-4 pr-2">
                           <div className="space-y-3">
                             {processedData.arbolEfectividad.topTramites.map((tramite, index) => {
                               const maxCant = processedData.arbolEfectividad.topTramites[0]?.cantidad || 1;
@@ -684,7 +684,7 @@ export default function ExcelMacroRunner() {
                           Interacciones por Dia
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="pt-4 h-52 overflow-y-auto pr-2">
+                      <CardContent className="pt-4 h-auto min-h-[14rem] pb-4 pr-2">
                         <div className="space-y-3">
                           {processedData.arbolEfectividad.interaccionesDia.map((diaInfo, index) => {
                             const maxCant = Math.max(...processedData.arbolEfectividad.interaccionesDia.map(d => d.cantidad), 1);
@@ -719,7 +719,7 @@ export default function ExcelMacroRunner() {
                             Horas Prime (Top 10)
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="pt-4 h-52 overflow-y-auto pr-2">
+                        <CardContent className="pt-4 h-auto min-h-[14rem] pb-4 pr-2">
                           <div className="space-y-3">
                             {processedData.arbolEfectividad.horasPrime.slice(0, 10).map((hora, index) => {
                               const maxCant = processedData.arbolEfectividad.horasPrime[0]?.cantidad || 1;
@@ -755,7 +755,7 @@ export default function ExcelMacroRunner() {
                             Calificacion de Servicio
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="pt-4 h-52 overflow-y-auto pr-2">
+                        <CardContent className="pt-4 h-auto min-h-[14rem] max-h-[400px] overflow-y-auto pr-2">
                           <div className="space-y-3">
                             {processedData.arbolEfectividad.calificacion.map((calif, index) => {
                               const maxCant = processedData.arbolEfectividad.calificacion.reduce((max, c) => Math.max(max, c.cantidad), 1);
@@ -893,31 +893,35 @@ export default function ExcelMacroRunner() {
                           </TableBody>
                         </Table>
 
-                        {/* Progreso UI (PDF Safe) */}
-                        <CardContent className="p-4 bg-slate-50 pt-4 h-[180px] overflow-y-auto">
-                          <div className="space-y-3">
-                            {tramite.temas.slice(0, 5).map((t, index) => {
-                              const maxCant = tramite.temas[0]?.cantidad || 1;
-                              const pct = (t.cantidad / maxCant) * 100;
-                              return (
-                                <div key={index} className="space-y-1">
-                                  <div className="flex justify-between items-center text-xs">
-                                    <span className="font-medium text-slate-700 truncate pr-2" title={t.tema}>{t.tema}</span>
-                                    <span className="text-slate-500 font-semibold">{t.cantidad.toLocaleString()}</span>
-                                  </div>
-                                  <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
-                                    <div 
-                                      className="h-1.5 rounded-full" 
-                                      style={{ 
-                                        width: `${pct}%`,
-                                        backgroundColor: CHART_COLORS[index % CHART_COLORS.length]
-                                      }}
-                                    />
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
+                        {/* Subtramites PieChart */}
+                        <CardContent className="p-0 bg-slate-50 pt-3 h-56 flex flex-col items-center justify-center">
+                          {tramite.temas.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                              <PieChart margin={{ top: 10, right: 10, bottom: 20, left: 10 }}>
+                                <Pie
+                                  data={tramite.temas}
+                                  cx="50%"
+                                  cy="50%"
+                                  outerRadius={65}
+                                  dataKey="cantidad"
+                                  nameKey="tema"
+                                  isAnimationActive={false}
+                                  stroke="none"
+                                >
+                                  {tramite.temas.map((_, index) => (
+                                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                                  ))}
+                                </Pie>
+                                <Tooltip
+                                  formatter={(value: number) => value.toLocaleString()}
+                                  contentStyle={{ borderRadius: "8px" }}
+                                />
+                                <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '10px' }} />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <span className="text-slate-400 text-sm italic">Sin sub-tramites</span>
+                          )}
                         </CardContent>
                       </Card>
                     ))}
@@ -932,8 +936,8 @@ export default function ExcelMacroRunner() {
       {/* Footer */}
       <footer className="bg-gradient-to-r from-[#0D4F8B] to-[#0A3D6B] text-white py-4 px-6 mt-auto">
         <div className="flex items-center justify-between text-sm">
-          <span className="font-medium">Macro Runner Pro</span>
-          <span className="text-blue-200">Procesamiento de Reportes Excel</span>
+          <span className="font-medium">Reportes y arboles de efectividad RRSS</span>
+          <span className="text-blue-200">Para soporte escribir a acascantem@netcom.com.pa</span>
         </div>
       </footer>
     </div>
