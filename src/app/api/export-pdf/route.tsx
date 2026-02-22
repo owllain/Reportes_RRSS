@@ -300,8 +300,8 @@ function ResumenPage({ data, macroId }: { data: ProcessedData; macroId: string }
               <Text style={styles.tableHeaderCell}>DATOS GENERALES TIPIFICACION</Text>
             </View>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
-            <PdfPieChart data={data.resumen.categorias.map(c => ({ name: c.nombre, value: c.cantidad }))} size={150} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 15 }}>
+            <PdfPieChart data={data.resumen.categorias.map(c => ({ name: c.nombre, value: c.cantidad }))} size={180} />
             <PdfLegend data={data.resumen.categorias.map(c => ({ name: c.nombre, value: c.cantidad }))} />
           </View>
           <View style={[styles.table, { marginTop: 10 }]}>
@@ -332,8 +332,8 @@ function ResumenPage({ data, macroId }: { data: ProcessedData; macroId: string }
               <Text style={styles.tableHeaderCell}>DETALLE DE TIPIFICACION {macroId.toUpperCase()}</Text>
             </View>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
-            <PdfPieChart data={data.arbolEfectividad.señales.slice(0, 10).map(s => ({ name: s.nombre, value: s.cantidad }))} size={150} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 15 }}>
+            <PdfPieChart data={data.arbolEfectividad.señales.slice(0, 10).map(s => ({ name: s.nombre, value: s.cantidad }))} size={180} />
             <PdfLegend data={data.arbolEfectividad.señales.slice(0, 8).map(s => ({ name: s.nombre, value: s.cantidad }))} />
           </View>
           <View style={[styles.table, { marginTop: 10 }]}>
@@ -519,9 +519,9 @@ function SubTramitesPage({ data, macroId }: { data: ProcessedData; macroId: stri
               <Text style={{ color: WHITE, fontSize: 10, fontWeight: 'bold' }}>Tramite: {tramite.nombre}</Text>
            </View>
            
-           <View style={{ flexDirection: 'row', minHeight: 220, width: '100%', marginVertical: 10 }}>
+           <View style={{ flexDirection: 'row', minHeight: 250, width: '100%', marginVertical: 15 }}>
               {/* Tabla Izquierda */}
-              <View style={{ width: '32%' }}>
+              <View style={{ width: '28%' }}>
                  <View style={styles.table}>
                     <View style={styles.tableHeader}>
                        <Text style={[styles.tableHeaderCell, { width: '75%', textAlign: 'left', paddingLeft: 5 }]}>Tema / Servicio</Text>
@@ -541,9 +541,9 @@ function SubTramitesPage({ data, macroId }: { data: ProcessedData; macroId: stri
               </View>
 
               {/* Gráfico Derecha */}
-              <View style={{ width: '68%', paddingLeft: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }}>
-                 <View style={{ width: 190, height: 190, justifyContent: 'center', alignItems: 'center' }}>
-                    <PdfPieChart data={tramite.temas.map(t => ({ name: t.tema, value: t.cantidad }))} size={180} />
+              <View style={{ width: '72%', paddingLeft: 25, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }}>
+                 <View style={{ width: 230, height: 230, justifyContent: 'center', alignItems: 'center' }}>
+                    <PdfPieChart data={tramite.temas.map(t => ({ name: t.tema, value: t.cantidad }))} size={220} />
                  </View>
                  <PdfLegend data={tramite.temas.map(t => ({ name: t.tema, value: t.cantidad }))} />
               </View>
