@@ -225,7 +225,36 @@ export async function processExcelFileLocal(file: File, macroId: string, setProg
         hora = fecha.getHours();
       } else if (typeof fechaRaw === "string" && fechaRaw) {
         try {
-          fecha = new Date(fechaRaw);
+          // Limpiar formato regional: "1/1/2026 6:23:37 a. m." -> "1/1/2026 6:23:37 AM"
+          let cleanFecha = fechaRaw
+            .replace(/a\.\s*m\./i, "AM")
+            .replace(/p\.\s*m\./i, "PM")
+            .trim();
+            
+          fecha = new Date(cleanFecha);
+          
+          // Fallback para formatos latinos si falla el constructor estandar (DD/MM/YYYY)
+          if (isNaN(fecha.getTime()) && cleanFecha.includes('/')) {
+            const [datePart, timePart] = cleanFecha.split(' ');
+            const [d, m, y] = datePart.split('/').map(Number);
+            if (timePart) {
+              const matches = timePart.match(/(\d+):(\d+):?(\d+)?\s*(AM|PM)?/i);
+              if (matches) {
+                let h = parseInt(matches[1]);
+                const min = parseInt(matches[2]);
+                const sec = matches[3] ? parseInt(matches[3]) : 0;
+                const ampm = matches[4]?.toUpperCase();
+                
+                if (ampm === "PM" && h < 12) h += 12;
+                if (ampm === "AM" && h === 12) h = 0;
+                
+                fecha = new Date(y, m - 1, d, h, min, sec);
+              }
+            } else {
+              fecha = new Date(y, m - 1, d);
+            }
+          }
+
           if (!isNaN(fecha.getTime())) {
             hora = fecha.getHours();
           } else {
