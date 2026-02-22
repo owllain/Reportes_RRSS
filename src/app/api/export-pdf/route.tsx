@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import React from "react";
-import { Document, Page, Text, View, StyleSheet, pdf, Svg, Path, Circle } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, pdf, Svg, Path, Circle, G } from "@react-pdf/renderer";
 
 interface ProcessedData {
   resumen: {
@@ -57,27 +57,63 @@ function describeArc(x: number, y: number, radius: number, startAngle: number, e
 // Componente PdfPieChart
 const PdfPieChart = ({ data, size = 110 }: { data: { name: string; value: number }[], size?: number }) => {
   const total = data.reduce((sum, item) => sum + item.value, 0);
-  let currentAngle = 0;
-  
   if (total === 0) return <View style={{ width: size, height: size, backgroundColor: '#eee', borderRadius: size/2 }} />;
 
-  const radius = size / 2;
   const center = size / 2;
+  const radius = size * 0.45;
+
+  const slices = data.filter(item => item.value > 0).reduce((acc, item, index) => {
+    const start = acc.length > 0 ? acc[acc.length - 1].endAngle : 0;
+    const sliceAngle = (item.value / total) * 360;
+    const end = start + sliceAngle;
+    
+    // Calcular punto medio para el porcentaje
+    const midAngle = start + (sliceAngle / 2);
+    const midPoint = polarToCartesian(center, center, radius * 0.65, midAngle);
+    const pctVal = Math.round((item.value / total) * 100);
+    const pctText = pctVal > 5 ? `${pctVal}%` : "";
+
+    acc.push({ 
+      startAngle: start, 
+      endAngle: end, 
+      color: CHART_COLORS[index % CHART_COLORS.length], 
+      value: item.value,
+      pct: pctText,
+      textPos: midPoint
+    });
+    return acc;
+  }, [] as any[]);
 
   return (
     <View style={{ width: size, height: size }}>
       <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        {data.map((item, index) => {
-          if (item.value === total) {
-            return <Circle key={index} cx={center} cy={center} r={radius} fill={CHART_COLORS[index % CHART_COLORS.length]} />;
+        {slices.map((slice, index) => {
+          if (slice.value === total) {
+            return (
+              <G key={index}>
+                <Circle cx={center} cy={center} r={radius} fill={slice.color} />
+                <Text x={center} y={center - 3} fill="white" style={{ fontSize: 7 }} textAnchor="middle">{slice.pct}</Text>
+              </G>
+            );
           }
-          if (item.value === 0) return null;
-          const sliceAngle = (item.value / total) * 360;
-          const endAngle = currentAngle + sliceAngle;
-          const path = describeArc(center, center, radius, currentAngle, endAngle);
-          const color = CHART_COLORS[index % CHART_COLORS.length];
-          currentAngle = endAngle;
-          return <Path key={index} d={path} fill={color} />;
+
+          const path = describeArc(center, center, radius, slice.startAngle, slice.endAngle);
+          return (
+            <G key={index}>
+              <Path d={path} fill={slice.color} />
+              {slice.pct && (
+                <Text 
+                  x={slice.textPos.x} 
+                  y={slice.textPos.y} 
+                  fill="white" 
+                  style={{ fontSize: 4, fontWeight: 'bold' }}
+                  textAnchor="middle"
+                >
+                  {slice.pct}
+                </Text>
+              )}
+            </G>
+          );
         })}
       </Svg>
     </View>
@@ -89,13 +125,13 @@ const PdfLegend = ({ data }: { data: { name: string; value: number; color?: stri
   const total = data.reduce((sum, item) => sum + item.value, 0);
   return (
     <View style={{ marginLeft: 15, flex: 1, justifyContent: 'center' }}>
-      {data.map((item, index) => {
+      {data.slice(0, 10).map((item, index) => {
         const pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : "0.0";
         return (
-          <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+          <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
             <View style={{ width: 8, height: 8, backgroundColor: item.color || CHART_COLORS[index % CHART_COLORS.length], marginRight: 4 }} />
-            <Text style={{ fontSize: 6, color: '#333', flexShrink: 1 }}>
-              {item.name.length > 30 ? item.name.substring(0, 30) + '...' : item.name} ({pct}%)
+            <Text style={{ fontSize: 5, color: '#333', flexShrink: 1 }}>
+              {item.name.length > 35 ? item.name.substring(0, 35) + '...' : item.name} ({pct}%)
             </Text>
           </View>
         );
@@ -103,6 +139,14 @@ const PdfLegend = ({ data }: { data: { name: string; value: number; color?: stri
     </View>
   );
 }
+
+// Header de Sección
+const SectionHeader = ({ title, subtitle }: { title: string; subtitle?: string }) => (
+  <View style={{ marginBottom: 15, borderBottom: 2, borderBottomColor: AZUL_REY, paddingBottom: 5 }}>
+    <Text style={{ fontSize: 18, fontWeight: 'bold', color: AZUL_REY, textTransform: 'uppercase' }}>{title}</Text>
+    {subtitle && <Text style={{ fontSize: 8, color: '#666', marginTop: 2 }}>{subtitle}</Text>}
+  </View>
+);
 
 const styles = StyleSheet.create({
   page: {
@@ -226,6 +270,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   footerText: {
+    fontSize: 7,
+    color: "#666666",
+    fontWeight: "bold",
+  },
+  supportText: {
     fontSize: 6,
     color: "#999999",
   },
@@ -236,11 +285,13 @@ function ResumenPage({ data, macroId }: { data: ProcessedData; macroId: string }
   return (
     <Page size="A4" orientation="landscape" style={styles.page}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>REPORTE {macroId.toUpperCase()} - RESUMEN</Text>
+        <Text style={styles.headerTitle}>Reportes y arboles de efectividad RRSS - INFORME CORPORATIVO</Text>
         <Text style={styles.headerInfo}>
-          Fecha: {new Date().toLocaleDateString("es-ES")} | Total: {data.resumen.total.toLocaleString()} registros
+          Fecha de Emisión: {new Date().toLocaleDateString("es-ES")}
         </Text>
       </View>
+
+      <SectionHeader title="RESUMEN" subtitle="Consolidado general de tipificaciones y volúmenes por categoría" />
 
       <View style={styles.row}>
         {/* Resumen */}
@@ -268,8 +319,8 @@ function ResumenPage({ data, macroId }: { data: ProcessedData; macroId: string }
                 </View>
               ))}
               <View style={styles.totalRow}>
-                <Text style={[styles.totalCell, styles.col1]}>TOTAL REGISTROS</Text>
-                <Text style={[styles.totalCell, { ...styles.col2, backgroundColor: NARANJA }]}>{data.resumen.total.toLocaleString()}</Text>
+                <Text style={[styles.totalCell, styles.col1, { textAlign: 'left', paddingLeft: 10 }]}>TOTAL REGISTROS</Text>
+                <Text style={[styles.totalCell, styles.col2, { borderRightWidth: 1 }]}>{data.resumen.total.toLocaleString()}</Text>
                 <Text style={[styles.totalCell, styles.col3]}>100%</Text>
               </View>
             </View>
@@ -301,8 +352,8 @@ function ResumenPage({ data, macroId }: { data: ProcessedData; macroId: string }
                 </View>
               ))}
               <View style={styles.totalRow}>
-                <Text style={[styles.totalCell, styles.col1]}>TOTALES</Text>
-                <Text style={[styles.totalCell, { ...styles.col2, backgroundColor: NARANJA }]}>{data.resumen.total.toLocaleString()}</Text>
+                <Text style={[styles.totalCell, styles.col1, { textAlign: 'left', paddingLeft: 10 }]}>TOTALES</Text>
+                <Text style={[styles.totalCell, styles.col2, { borderRightWidth: 1 }]}>{data.resumen.total.toLocaleString()}</Text>
                 <Text style={[styles.totalCell, styles.col3]}>100%</Text>
               </View>
             </View>
@@ -350,8 +401,9 @@ function ResumenPage({ data, macroId }: { data: ProcessedData; macroId: string }
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Macro Runner Pro</Text>
-        <Text style={styles.footerText}>Pagina 1 de 3</Text>
+        <Text style={styles.footerText}>Reportes y arboles de efectividad RRSS</Text>
+        <Text style={styles.supportText}>Para soporte escribir a acascantem@netcom.com.pa</Text>
+        <Text style={styles.footerText}>Pagina 1</Text>
       </View>
     </Page>
   );
@@ -362,9 +414,11 @@ function GraficosPage({ data, macroId }: { data: ProcessedData; macroId: string 
   return (
     <Page size="A4" orientation="landscape" style={styles.page}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>REPORTE {macroId.toUpperCase()} - ESTADISTICAS</Text>
-        <Text style={styles.headerInfo}>Analisis de horarios, calificaciones y solicitudes</Text>
+        <Text style={styles.headerTitle}>Reportes y arboles de efectividad RRSS - ANALISIS DE PERFORMANCE</Text>
+        <Text style={styles.headerInfo}>Canal: {macroId.toUpperCase()} | Métricas de efectividad y horarios</Text>
       </View>
+
+      <SectionHeader title="ARBOL EFECTIVIDAD" subtitle="Detalle cuantitativo de interacciones, señales y desempeño por franja horaria" />
 
       <View style={styles.row}>
         {/* Horas Prime */}
@@ -449,8 +503,9 @@ function GraficosPage({ data, macroId }: { data: ProcessedData; macroId: string 
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Macro Runner Pro</Text>
-        <Text style={styles.footerText}>Pagina 2 de 3</Text>
+        <Text style={styles.footerText}>Reportes y arboles de efectividad RRSS</Text>
+        <Text style={styles.supportText}>Para soporte escribir a acascantem@netcom.com.pa</Text>
+        <Text style={styles.footerText}>Pagina 2</Text>
       </View>
     </Page>
   );
@@ -458,50 +513,50 @@ function GraficosPage({ data, macroId }: { data: ProcessedData; macroId: string 
 
 // Sub Tramites Page
 function SubTramitesPage({ data, macroId }: { data: ProcessedData; macroId: string }) {
-  const itemsPerRow = 3;
-  const rows: ProcessedData["subTramites"][] = [];
-  
-  for (let i = 0; i < data.subTramites.length; i += itemsPerRow) {
-    rows.push(data.subTramites.slice(i, i + itemsPerRow));
-  }
-
   return (
     <Page size="A4" orientation="landscape" style={styles.page}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>REPORTE {macroId.toUpperCase()} - SUB TRAMITES</Text>
-        <Text style={styles.headerInfo}>Detalle de sub tramites por categoria</Text>
+        <Text style={styles.headerTitle}>Reportes y arboles de efectividad RRSS - DETALLE TECNICO</Text>
+        <Text style={styles.headerInfo}>Desglose cualitativo por sub-tramites y temas específicos</Text>
       </View>
 
-      {rows.map((rowItems, rowIdx) => (
-        <View key={rowIdx} style={[styles.row, { marginBottom: 8 }]}>
-          {rowItems.map((tramite, idx) => (
-            <View key={idx} style={styles.colThird}>
-              <View style={styles.table}>
-                <View style={[styles.tableHeader, { backgroundColor: AZUL_REY }]}>
-                  <Text style={[styles.tableHeaderCell, { width: "100%", textAlign: "left", backgroundColor: AZUL_REY }]}>
-                    Tramite: {tramite.nombre}
-                  </Text>
-                </View>
-                <View style={styles.tableHeader}>
-                  <Text style={[styles.tableHeaderCell, { width: "70%" }]}>Tema</Text>
-                  <Text style={[styles.tableHeaderCell, { width: "30%" }]}>Cant.</Text>
-                </View>
-                {tramite.temas.slice(0, 6).map((t, i) => (
-                  <View key={i} style={i % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
-                    <Text style={[styles.tableCellLeft, { width: "70%" }]}>{t.tema}</Text>
-                    <Text style={[styles.tableCell, { width: "30%" }]}>{t.cantidad.toLocaleString()}</Text>
-                  </View>
-                ))}
-                <View style={styles.totalRow}>
-                  <Text style={[styles.totalCell, { width: "70%" }]}>Total General</Text>
-                  <Text style={[styles.totalCell, { width: "30%", backgroundColor: AZUL_REY }]}>{tramite.total.toLocaleString()}</Text>
-                </View>
+      <SectionHeader title="SUB TRAMITES" subtitle="Distribución detallada por temas críticos en los trámites prioritarios" />
+
+      {data.subTramites.map((tramite, idx) => (
+        <View key={idx} wrap={false} style={{ marginBottom: 20, borderBottom: 1, borderBottomColor: '#eee', paddingBottom: 10 }}>
+           <View style={{ backgroundColor: AZUL_REY, padding: 4, marginBottom: 5 }}>
+              <Text style={{ color: WHITE, fontSize: 10, fontWeight: 'bold' }}>Tramite: {tramite.nombre}</Text>
+           </View>
+           
+           <View style={{ flexDirection: 'row', minHeight: 180 }}>
+              {/* Tabla Izquierda */}
+              <View style={{ width: '40%' }}>
+                 <View style={styles.table}>
+                    <View style={styles.tableHeader}>
+                       <Text style={[styles.tableHeaderCell, { width: '80%', textAlign: 'left', paddingLeft: 5 }]}>Tema / Servicio</Text>
+                       <Text style={[styles.tableHeaderCell, { width: '20%' }]}>Cant.</Text>
+                    </View>
+                    {tramite.temas.slice(0, 15).map((t, i) => (
+                       <View key={i} style={i % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
+                          <Text style={[styles.tableCellLeft, { width: '80%', fontSize: 5 }]}>{t.tema}</Text>
+                          <Text style={[styles.tableCell, { width: '20%', fontSize: 5 }]}>{t.cantidad.toLocaleString()}</Text>
+                       </View>
+                    ))}
+                    <View style={styles.totalRow}>
+                       <Text style={[styles.totalCell, { width: '80%', textAlign: 'left', paddingLeft: 5, fontSize: 6 }]}>Subtotal {tramite.nombre}</Text>
+                       <Text style={[styles.totalCell, { width: '20%', fontSize: 6 }]}>{tramite.total.toLocaleString()}</Text>
+                    </View>
+                 </View>
               </View>
-            </View>
-          ))}
-          {rowItems.length < itemsPerRow && Array.from({ length: itemsPerRow - rowItems.length }).map((_, i) => (
-            <View key={`empty-${i}`} style={styles.colThird} />
-          ))}
+
+              {/* Gráfico Derecha */}
+              <View style={{ width: '60%', paddingLeft: 10, flexDirection: 'row', alignItems: 'center' }}>
+                 <View style={{ width: 140, height: 140, justifyContent: 'center', alignItems: 'center' }}>
+                    <PdfPieChart data={tramite.temas.map(t => ({ name: t.tema, value: t.cantidad }))} size={130} />
+                 </View>
+                 <PdfLegend data={tramite.temas.map(t => ({ name: t.tema, value: t.cantidad }))} />
+              </View>
+           </View>
         </View>
       ))}
 
@@ -512,8 +567,9 @@ function SubTramitesPage({ data, macroId }: { data: ProcessedData; macroId: stri
       )}
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Macro Runner Pro</Text>
-        <Text style={styles.footerText}>Pagina 3 de 3</Text>
+        <Text style={styles.footerText}>Reportes y arboles de efectividad RRSS</Text>
+        <Text style={styles.supportText}>Para soporte escribir a acascantem@netcom.com.pa</Text>
+        <Text style={styles.footerText}>Pagina 3</Text>
       </View>
     </Page>
   );

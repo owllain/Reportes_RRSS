@@ -353,17 +353,17 @@ export default function ExcelMacroRunner() {
                 }`}
                 onClick={() => setSelectedMacro(macro.id)}
               >
-                <CardContent className="p-3 flex flex-col items-center gap-2">
+                <CardContent className="p-2.5 flex flex-col items-center gap-2">
                   <div
-                    className={`p-2.5 rounded-lg bg-gradient-to-br ${macro.gradient} text-white shadow-md`}
+                    className={`p-2 rounded-lg bg-gradient-to-br ${macro.gradient} text-white shadow-md`}
                   >
                     {macro.icon}
                   </div>
-                  <span className={`text-sm font-semibold ${macro.color}`}>
+                  <span className={`text-[13px] font-semibold ${macro.color}`}>
                     {macro.name}
                   </span>
                   {selectedMacro === macro.id && (
-                    <CheckCircle2 className="w-5 h-5 text-[#00BFA5]" />
+                    <CheckCircle2 className="w-4 h-4 text-[#00BFA5] absolute top-1.5 right-1.5" />
                   )}
                 </CardContent>
               </Card>
@@ -755,7 +755,7 @@ export default function ExcelMacroRunner() {
                             Calificacion de Servicio
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="pt-4 h-auto min-h-[14rem] max-h-[400px] overflow-y-auto pr-2">
+                        <CardContent className="pt-4 h-auto min-h-[14rem] pb-4 pr-2">
                           <div className="space-y-3">
                             {processedData.arbolEfectividad.calificacion.map((calif, index) => {
                               const maxCant = processedData.arbolEfectividad.calificacion.reduce((max, c) => Math.max(max, c.cantidad), 1);
@@ -788,11 +788,11 @@ export default function ExcelMacroRunner() {
                       processedData.arbolEfectividad.solicitudes.length > 0 && (
                         <Card className="shadow-md border-slate-200">
                           <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-semibold text-slate-700">
-                              Top Solicitudes
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="h-60 pt-6">
+                          <CardTitle className="text-sm font-semibold text-slate-700">
+                            Top Solicitudes
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="h-auto min-h-[18rem] pt-2 pb-6">
                             <ResponsiveContainer width="100%" height="100%">
                               <PieChart margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
                                 <Pie
@@ -843,7 +843,7 @@ export default function ExcelMacroRunner() {
 
                 {/* Sub Tramites Tab */}
                 <TabsContent value="subtramites" className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  <div className="flex flex-col gap-8">
                     {processedData.subTramites.map((tramite, idx) => (
                       <Card
                         key={idx}
@@ -851,78 +851,90 @@ export default function ExcelMacroRunner() {
                       >
                         <CardHeader className="bg-gradient-to-r from-[#0D4F8B] to-[#0A3D6B] text-white py-3">
                           <CardTitle className="text-sm flex justify-between items-center">
-                            <span className="font-semibold">Tramite</span>
+                            <span className="font-semibold">Tramite: <span className="text-blue-100">{tramite.nombre}</span></span>
                             <Badge className="bg-[#FF6D00] text-white">
-                              {tramite.nombre}
+                              Total: {tramite.total.toLocaleString()}
                             </Badge>
                           </CardTitle>
                         </CardHeader>
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="bg-[#FF6D00] hover:bg-[#FF6D00]">
-                              <TableHead className="text-white font-semibold">
-                                Tema
-                              </TableHead>
-                              <TableHead className="text-white font-semibold text-center">
-                                Cantidad
-                              </TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {tramite.temas.slice(0, 5).map((t, i) => (
-                              <TableRow
-                                key={i}
-                                className="hover:bg-slate-50 border-b border-slate-100"
-                              >
-                                <TableCell className="text-slate-700">
-                                  {t.tema}
-                                </TableCell>
-                                <TableCell className="text-center font-semibold text-slate-600">
-                                  {t.cantidad.toLocaleString()}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                            <TableRow className="bg-[#FF6D00] hover:bg-[#FF6D00]">
-                              <TableCell className="text-white font-bold">
-                                Total General
-                              </TableCell>
-                              <TableCell className="text-white font-bold text-center bg-[#0D4F8B]">
-                                {tramite.total.toLocaleString()}
-                              </TableCell>
-                            </TableRow>
-                          </TableBody>
-                        </Table>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+                          <div className="border-r border-slate-100">
+                            <Table>
+                              <TableHeader>
+                                <TableRow className="bg-[#FF6D00] hover:bg-[#FF6D00]">
+                                  <TableHead className="text-white font-semibold">
+                                    Tema
+                                  </TableHead>
+                                  <TableHead className="text-white font-semibold text-center">
+                                    Cantidad
+                                  </TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {tramite.temas.map((t, i) => (
+                                  <TableRow
+                                    key={i}
+                                    className="hover:bg-slate-50 border-b border-slate-100"
+                                  >
+                                    <TableCell className="text-slate-700 font-medium py-3">
+                                      {t.tema}
+                                    </TableCell>
+                                    <TableCell className="text-center font-semibold text-slate-600">
+                                      {t.cantidad.toLocaleString()}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                                <TableRow className="bg-slate-800 hover:bg-slate-800">
+                                  <TableCell className="text-white font-bold py-3">
+                                    Total General
+                                  </TableCell>
+                                  <TableCell className="text-white font-bold text-center bg-[#0D4F8B]">
+                                    {tramite.total.toLocaleString()}
+                                  </TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          </div>
 
-                        {/* Subtramites PieChart */}
-                        <CardContent className="p-0 bg-slate-50 pt-3 h-56 flex flex-col items-center justify-center">
-                          {tramite.temas.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                              <PieChart margin={{ top: 10, right: 10, bottom: 20, left: 10 }}>
-                                <Pie
-                                  data={tramite.temas}
-                                  cx="50%"
-                                  cy="50%"
-                                  outerRadius={65}
-                                  dataKey="cantidad"
-                                  nameKey="tema"
-                                  isAnimationActive={false}
-                                  stroke="none"
-                                >
-                                  {tramite.temas.map((_, index) => (
-                                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                                  ))}
-                                </Pie>
-                                <Tooltip
-                                  formatter={(value: number) => value.toLocaleString()}
-                                  contentStyle={{ borderRadius: "8px" }}
-                                />
-                                <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '10px' }} />
-                              </PieChart>
-                            </ResponsiveContainer>
-                          ) : (
-                            <span className="text-slate-400 text-sm italic">Sin sub-tramites</span>
-                          )}
-                        </CardContent>
+                          <div className="p-6 flex flex-col items-center justify-center bg-slate-50/50 min-h-[300px]">
+                            <h4 className="text-xs font-bold text-slate-500 mb-4 uppercase tracking-wider">Distribución por Temas</h4>
+                            {tramite.temas.length > 0 ? (
+                              <ResponsiveContainer width="100%" height={320}>
+                                <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                                  <Pie
+                                    data={tramite.temas}
+                                    cx="50%"
+                                    cy="50%"
+                                    outerRadius={100}
+                                    dataKey="cantidad"
+                                    nameKey="tema"
+                                    isAnimationActive={false}
+                                    stroke="none"
+                                    labelLine={true}
+                                    label={({ name, percent }) => {
+                                      const shortName = name.length > 20 ? name.substring(0, 20) + "..." : name;
+                                      return `${shortName}: ${(percent * 100).toFixed(1)}%`;
+                                    }}
+                                  >
+                                    {tramite.temas.map((_, index) => (
+                                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                                    ))}
+                                  </Pie>
+                                  <Tooltip
+                                    formatter={(value: number) => value.toLocaleString()}
+                                    contentStyle={{ borderRadius: "8px", border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                  />
+                                  <Legend verticalAlign="bottom" align="center" layout="horizontal" iconType="circle" wrapperStyle={{ paddingTop: '20px', fontSize: '11px' }} />
+                                </PieChart>
+                              </ResponsiveContainer>
+                            ) : (
+                              <div className="flex flex-col items-center gap-2 text-slate-400">
+                                <AlertCircle className="w-8 h-8 opacity-20" />
+                                <span className="text-sm italic">Sin datos disponibles</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </Card>
                     ))}
                   </div>
