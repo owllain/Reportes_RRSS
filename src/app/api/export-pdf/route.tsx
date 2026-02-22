@@ -152,24 +152,23 @@ const styles = StyleSheet.create({
   page: {
     flexDirection: "column",
     backgroundColor: WHITE,
-    padding: 15,
-    fontFamily: "Helvetica",
-    fontSize: 8,
+    padding: 20,
+    paddingBottom: 40, // Espacio para el footer
   },
   header: {
+    backgroundColor: AZUL_REY,
     marginBottom: 10,
+    padding: 5,
   },
   headerTitle: {
     fontSize: 14,
     fontWeight: "bold",
     textAlign: "center",
-    padding: 8,
-    backgroundColor: AZUL_REY,
     color: WHITE,
   },
   headerInfo: {
     fontSize: 7,
-    color: "#666666",
+    color: WHITE,
     textAlign: "center",
     marginTop: 3,
   },
@@ -261,8 +260,8 @@ const styles = StyleSheet.create({
   footer: {
     position: "absolute",
     bottom: 10,
-    left: 15,
-    right: 15,
+    left: 20,
+    right: 20,
     borderTopWidth: 1,
     borderTopColor: "#CCCCCC",
     paddingTop: 5,
@@ -293,109 +292,101 @@ function ResumenPage({ data, macroId }: { data: ProcessedData; macroId: string }
 
       <SectionHeader title="RESUMEN" subtitle="Consolidado general de tipificaciones y volúmenes por categoría" />
 
-      <View style={styles.row}>
+      <View style={[styles.row, { height: 220 }]}>
         {/* Resumen */}
-        <View style={styles.colHalf}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>DATOS GENERALES TIPIFICACION</Text>
-            
-            {/* Seccion de Grafico y Leyenda (PDF Safe) */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8, paddingHorizontal: 10 }}>
-              <PdfPieChart data={data.resumen.categorias.map(c => ({ name: c.nombre, value: c.cantidad }))} size={100} />
-              <PdfLegend data={data.resumen.categorias.map(c => ({ name: c.nombre, value: c.cantidad }))} />
+        <View style={{ width: '50%', paddingRight: 10 }}>
+          <View style={[styles.table, { marginBottom: 5 }]}>
+            <View style={styles.tableHeader}>
+              <Text style={styles.tableHeaderCell}>DATOS GENERALES TIPIFICACION</Text>
             </View>
-
-            <View style={styles.table}>
-              <View style={styles.tableHeader}>
-                <Text style={[styles.tableHeaderCell, styles.col1]}>Categoria</Text>
-                <Text style={[styles.tableHeaderCell, styles.col2]}>Cantidad</Text>
-                <Text style={[styles.tableHeaderCell, styles.col3]}>Porcentaje</Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <PdfPieChart data={data.resumen.categorias.map(c => ({ name: c.nombre, value: c.cantidad }))} size={130} />
+            <PdfLegend data={data.resumen.categorias.map(c => ({ name: c.nombre, value: c.cantidad }))} />
+          </View>
+          <View style={[styles.table, { marginTop: 10 }]}>
+            <View style={styles.tableHeader}>
+              <Text style={[styles.tableHeaderCell, { width: "35%" }]}>Categoria</Text>
+              <Text style={[styles.tableHeaderCell, { width: "32.5%" }]}>Cant.</Text>
+              <Text style={[styles.tableHeaderCell, { width: "32.5%" }]}>%</Text>
+            </View>
+            {data.resumen.categorias.map((cat, i) => (
+              <View key={i} style={i % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
+                <Text style={[styles.tableCellLeft, { width: "35%" }]}>{cat.nombre}</Text>
+                <Text style={[styles.tableCell, { width: "32.5%" }]}>{cat.cantidad.toLocaleString()}</Text>
+                <Text style={[styles.tableCell, { width: "32.5%" }]}>{(cat.porcentaje * 100).toFixed(1)}%</Text>
               </View>
-              {data.resumen.categorias.map((cat, idx) => (
-                <View key={idx} style={idx % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
-                  <Text style={[styles.tableCellLeft, styles.col1]}>{cat.nombre}</Text>
-                  <Text style={[styles.tableCell, styles.col2]}>{cat.cantidad.toLocaleString()}</Text>
-                  <Text style={[styles.tableCell, styles.col3]}>{(cat.porcentaje * 100).toFixed(1)}%</Text>
-                </View>
-              ))}
-              <View style={styles.totalRow}>
-                <Text style={[styles.totalCell, styles.col1, { textAlign: 'left', paddingLeft: 10 }]}>TOTAL REGISTROS</Text>
-                <Text style={[styles.totalCell, styles.col2, { borderRightWidth: 1 }]}>{data.resumen.total.toLocaleString()}</Text>
-                <Text style={[styles.totalCell, styles.col3]}>100%</Text>
-              </View>
+            ))}
+            <View style={styles.totalRow}>
+              <Text style={[styles.totalCell, { width: "35%", textAlign: 'left', paddingLeft: 10 }]}>TOTAL REGISTROS</Text>
+              <Text style={[styles.totalCell, { width: "32.5%" }]}>{data.resumen.total.toLocaleString()}</Text>
+              <Text style={[styles.totalCell, { width: "32.5%" }]}>100%</Text>
             </View>
           </View>
         </View>
 
-        {/* Señales */}
-        <View style={styles.colHalf}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>DETALLE DE TIPIFICACION {macroId.toUpperCase()}</Text>
-
-            {/* Grafico Señales */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8, paddingHorizontal: 10 }}>
-               <PdfPieChart data={data.arbolEfectividad.señales.slice(0, 7).map(s => ({ name: s.nombre, value: s.cantidad }))} size={100} />
-               <PdfLegend data={data.arbolEfectividad.señales.slice(0, 7).map(s => ({ name: s.nombre, value: s.cantidad }))} />
+        {/* Detalle */}
+        <View style={{ width: '50%' }}>
+          <View style={[styles.table, { marginBottom: 5 }]}>
+            <View style={styles.tableHeader}>
+              <Text style={styles.tableHeaderCell}>DETALLE DE TIPIFICACION {macroId.toUpperCase()}</Text>
             </View>
-
-            <View style={styles.table}>
-              <View style={styles.tableHeader}>
-                <Text style={[styles.tableHeaderCell, styles.col1]}>Senal</Text>
-                <Text style={[styles.tableHeaderCell, styles.col2]}>Cantidad</Text>
-                <Text style={[styles.tableHeaderCell, styles.col3]}>%</Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <PdfPieChart data={data.arbolEfectividad.señales.slice(0, 10).map(s => ({ name: s.nombre, value: s.cantidad }))} size={130} />
+            <PdfLegend data={data.arbolEfectividad.señales.map(s => ({ name: s.nombre, value: s.cantidad }))} />
+          </View>
+          <View style={[styles.table, { marginTop: 10 }]}>
+            <View style={styles.tableHeader}>
+              <Text style={[styles.tableHeaderCell, { width: "35%" }]}>Señal</Text>
+              <Text style={[styles.tableHeaderCell, { width: "32.5%" }]}>Cant.</Text>
+              <Text style={[styles.tableHeaderCell, { width: "32.5%" }]}>%</Text>
+            </View>
+            {data.arbolEfectividad.señales.slice(0, 8).map((señal, i) => (
+              <View key={i} style={i % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
+                <Text style={[styles.tableCellLeft, { width: "35%", fontSize: 6 }]}>{señal.nombre}</Text>
+                <Text style={[styles.tableCell, { width: "32.5%" }]}>{señal.cantidad.toLocaleString()}</Text>
+                <Text style={[styles.tableCell, { width: "32.5%" }]}>{(señal.porcentaje * 100).toFixed(1)}%</Text>
               </View>
-              {data.arbolEfectividad.señales.slice(0, 10).map((s, idx) => (
-                <View key={idx} style={idx % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
-                  <Text style={[styles.tableCellLeft, styles.col1]}>{s.nombre}</Text>
-                  <Text style={[styles.tableCell, styles.col2]}>{s.cantidad.toLocaleString()}</Text>
-                  <Text style={[styles.tableCell, styles.col3]}>{(s.porcentaje * 100).toFixed(1)}%</Text>
-                </View>
-              ))}
-              <View style={styles.totalRow}>
-                <Text style={[styles.totalCell, styles.col1, { textAlign: 'left', paddingLeft: 10 }]}>TOTALES</Text>
-                <Text style={[styles.totalCell, styles.col2, { borderRightWidth: 1 }]}>{data.resumen.total.toLocaleString()}</Text>
-                <Text style={[styles.totalCell, styles.col3]}>100%</Text>
-              </View>
+            ))}
+            <View style={styles.totalRow}>
+              <Text style={[styles.totalCell, { width: "35%", textAlign: 'left', paddingLeft: 10 }]}>TOTALES</Text>
+              <Text style={[styles.totalCell, { width: "32.5%" }]}>{data.resumen.total.toLocaleString()}</Text>
+              <Text style={[styles.totalCell, { width: "32.5%" }]}>100%</Text>
             </View>
           </View>
         </View>
       </View>
 
-      {/* Top Tramites & Interacciones */}
-      <View style={styles.row}>
-        <View style={styles.colHalf}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>TOP TRAMITES</Text>
-            <View style={styles.table}>
-              <View style={styles.tableHeader}>
-                <Text style={[styles.tableHeaderCell, { width: "60%" }]}>Tramite</Text>
-                <Text style={[styles.tableHeaderCell, { width: "40%" }]}>Cantidad</Text>
-              </View>
-              {data.arbolEfectividad.topTramites.map((t, idx) => (
-                <View key={idx} style={idx % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
-                  <Text style={[styles.tableCellLeft, { width: "60%" }]}>{t.nombre}</Text>
-                  <Text style={[styles.tableCell, { width: "40%" }]}>{t.cantidad.toLocaleString()}</Text>
-                </View>
-              ))}
+      <View style={[styles.row, { marginTop: 20 }]}>
+        <View style={{ width: '50%', paddingRight: 10 }}>
+          <View style={styles.table}>
+            <View style={styles.tableHeader}><Text style={styles.tableHeaderCell}>TOP TRAMITES</Text></View>
+            <View style={styles.tableHeader}>
+              <Text style={[styles.tableHeaderCell, { width: '75%' }]}>Tramite</Text>
+              <Text style={[styles.tableHeaderCell, { width: '25%' }]}>Cant.</Text>
             </View>
+            {data.arbolEfectividad.topTramites.map((t, i) => (
+              <View key={i} style={i % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
+                <Text style={[styles.tableCellLeft, { width: '75%', fontSize: 6 }]}>{t.nombre}</Text>
+                <Text style={[styles.tableCell, { width: '25%' }]}>{t.cantidad.toLocaleString()}</Text>
+              </View>
+            ))}
           </View>
         </View>
-
-        <View style={styles.colHalf}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>INTERACCIONES POR DIA</Text>
-            <View style={styles.table}>
-              <View style={styles.tableHeader}>
-                <Text style={[styles.tableHeaderCell, { width: "50%" }]}>Dia</Text>
-                <Text style={[styles.tableHeaderCell, { width: "50%" }]}>Cantidad</Text>
-              </View>
-              {data.arbolEfectividad.interaccionesDia.map((d, idx) => (
-                <View key={idx} style={idx % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
-                  <Text style={[styles.tableCellLeft, { width: "50%" }]}>{d.dia}</Text>
-                  <Text style={[styles.tableCell, { width: "50%" }]}>{d.cantidad.toLocaleString()}</Text>
-                </View>
-              ))}
+        <View style={{ width: '50%' }}>
+          <View style={styles.table}>
+            <View style={styles.tableHeader}><Text style={styles.tableHeaderCell}>INTERACCIONES POR DIA</Text></View>
+            <View style={styles.tableHeader}>
+              <Text style={[styles.tableHeaderCell, { width: '75%' }]}>Dia</Text>
+              <Text style={[styles.tableHeaderCell, { width: '25%' }]}>Cant.</Text>
             </View>
+            {data.arbolEfectividad.interaccionesDia.map((d, i) => (
+              <View key={i} style={i % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
+                <Text style={[styles.tableCellLeft, { width: '75%' }]}>{d.dia}</Text>
+                <Text style={[styles.tableCell, { width: '25%' }]}>{d.cantidad.toLocaleString()}</Text>
+              </View>
+            ))}
           </View>
         </View>
       </View>
@@ -528,31 +519,31 @@ function SubTramitesPage({ data, macroId }: { data: ProcessedData; macroId: stri
               <Text style={{ color: WHITE, fontSize: 10, fontWeight: 'bold' }}>Tramite: {tramite.nombre}</Text>
            </View>
            
-           <View style={{ flexDirection: 'row', minHeight: 180 }}>
+           <View style={{ flexDirection: 'row', minHeight: 180, width: '100%' }}>
               {/* Tabla Izquierda */}
-              <View style={{ width: '40%' }}>
+              <View style={{ width: '32%' }}>
                  <View style={styles.table}>
                     <View style={styles.tableHeader}>
                        <Text style={[styles.tableHeaderCell, { width: '80%', textAlign: 'left', paddingLeft: 5 }]}>Tema / Servicio</Text>
                        <Text style={[styles.tableHeaderCell, { width: '20%' }]}>Cant.</Text>
                     </View>
-                    {tramite.temas.slice(0, 15).map((t, i) => (
+                    {tramite.temas.slice(0, 16).map((t, i) => (
                        <View key={i} style={i % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
                           <Text style={[styles.tableCellLeft, { width: '80%', fontSize: 5 }]}>{t.tema}</Text>
                           <Text style={[styles.tableCell, { width: '20%', fontSize: 5 }]}>{t.cantidad.toLocaleString()}</Text>
                        </View>
                     ))}
                     <View style={styles.totalRow}>
-                       <Text style={[styles.totalCell, { width: '80%', textAlign: 'left', paddingLeft: 5, fontSize: 6 }]}>Subtotal {tramite.nombre}</Text>
+                       <Text style={[styles.totalCell, { width: '80%', textAlign: 'left', paddingLeft: 5, fontSize: 6 }]}>Subtotal</Text>
                        <Text style={[styles.totalCell, { width: '20%', fontSize: 6 }]}>{tramite.total.toLocaleString()}</Text>
                     </View>
                  </View>
               </View>
 
               {/* Gráfico Derecha */}
-              <View style={{ width: '60%', paddingLeft: 10, flexDirection: 'row', alignItems: 'center' }}>
-                 <View style={{ width: 140, height: 140, justifyContent: 'center', alignItems: 'center' }}>
-                    <PdfPieChart data={tramite.temas.map(t => ({ name: t.tema, value: t.cantidad }))} size={130} />
+              <View style={{ width: '68%', paddingLeft: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }}>
+                 <View style={{ width: 170, height: 170, justifyContent: 'center', alignItems: 'center' }}>
+                    <PdfPieChart data={tramite.temas.map(t => ({ name: t.tema, value: t.cantidad }))} size={160} />
                  </View>
                  <PdfLegend data={tramite.temas.map(t => ({ name: t.tema, value: t.cantidad }))} />
               </View>
