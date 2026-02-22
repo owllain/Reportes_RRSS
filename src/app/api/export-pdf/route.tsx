@@ -92,7 +92,7 @@ const PdfPieChart = ({ data, size = 110 }: { data: { name: string; value: number
             return (
               <G key={index}>
                 <Circle cx={center} cy={center} r={radius} fill={slice.color} />
-                <Text x={center} y={center - 3} fill="white" style={{ fontSize: 7 }} textAnchor="middle">{slice.pct}</Text>
+                <Text x={center} y={center - 5} fill="white" style={{ fontSize: 13, fontWeight: 'bold' }} textAnchor="middle">{slice.pct}</Text>
               </G>
             );
           }
@@ -106,7 +106,7 @@ const PdfPieChart = ({ data, size = 110 }: { data: { name: string; value: number
                   x={slice.textPos.x} 
                   y={slice.textPos.y} 
                   fill="white" 
-                  style={{ fontSize: 4, fontWeight: 'bold' }}
+                  style={{ fontSize: 9, fontWeight: 'bold' }}
                   textAnchor="middle"
                 >
                   {slice.pct}
@@ -280,9 +280,11 @@ const styles = StyleSheet.create({
 });
 
 // Resumen Page
-function ResumenPage({ data, macroId }: { data: ProcessedData; macroId: string }) {
+function ResumenPage({ data, macroId, orientation }: { data: ProcessedData; macroId: string, orientation: "portrait" | "landscape" }) {
+  const isPortrait = orientation === "portrait";
+
   return (
-    <Page size="A4" orientation="landscape" style={styles.page}>
+    <Page size="A4" orientation={orientation} style={styles.page}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Reportes y arboles de efectividad RRSS - INFORME CORPORATIVO</Text>
         <Text style={styles.headerInfo}>
@@ -292,16 +294,16 @@ function ResumenPage({ data, macroId }: { data: ProcessedData; macroId: string }
 
       <SectionHeader title="RESUMEN" subtitle="Consolidado general de tipificaciones y volúmenes por categoría" />
 
-      <View style={[styles.row, { marginBottom: 20 }]}>
+      <View style={[isPortrait ? { flexDirection: 'column' } : styles.row, { marginBottom: 20 }]}>
         {/* Resumen */}
-        <View style={{ width: '50%', paddingRight: 10 }}>
+        <View style={{ width: isPortrait ? '100%' : '50%', paddingRight: isPortrait ? 0 : 10, marginBottom: isPortrait ? 20 : 0 }}>
           <View style={[styles.table, { marginBottom: 5 }]}>
             <View style={styles.tableHeader}>
               <Text style={styles.tableHeaderCell}>DATOS GENERALES TIPIFICACION</Text>
             </View>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 15 }}>
-            <PdfPieChart data={data.resumen.categorias.map(c => ({ name: c.nombre, value: c.cantidad }))} size={180} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
+            <PdfPieChart data={data.resumen.categorias.map(c => ({ name: c.nombre, value: c.cantidad }))} size={isPortrait ? 180 : 150} />
             <PdfLegend data={data.resumen.categorias.map(c => ({ name: c.nombre, value: c.cantidad }))} />
           </View>
           <View style={[styles.table, { marginTop: 10 }]}>
@@ -326,14 +328,14 @@ function ResumenPage({ data, macroId }: { data: ProcessedData; macroId: string }
         </View>
 
         {/* Detalle */}
-        <View style={{ width: '50%', paddingLeft: 10 }}>
+        <View style={{ width: isPortrait ? '100%' : '50%', paddingLeft: isPortrait ? 0 : 10 }}>
           <View style={[styles.table, { marginBottom: 5 }]}>
             <View style={styles.tableHeader}>
               <Text style={styles.tableHeaderCell}>DETALLE DE TIPIFICACION {macroId.toUpperCase()}</Text>
             </View>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 15 }}>
-            <PdfPieChart data={data.arbolEfectividad.señales.slice(0, 10).map(s => ({ name: s.nombre, value: s.cantidad }))} size={180} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 10 }}>
+            <PdfPieChart data={data.arbolEfectividad.señales.slice(0, 10).map(s => ({ name: s.nombre, value: s.cantidad }))} size={isPortrait ? 180 : 150} />
             <PdfLegend data={data.arbolEfectividad.señales.slice(0, 8).map(s => ({ name: s.nombre, value: s.cantidad }))} />
           </View>
           <View style={[styles.table, { marginTop: 10 }]}>
@@ -358,8 +360,8 @@ function ResumenPage({ data, macroId }: { data: ProcessedData; macroId: string }
         </View>
       </View>
 
-      <View wrap={false} style={[styles.row, { marginTop: 15 }]}>
-        <View style={{ width: '50%', paddingRight: 10 }}>
+      <View wrap={false} style={[isPortrait ? { flexDirection: 'column' } : styles.row, { marginTop: 15 }]}>
+        <View style={{ width: isPortrait ? '100%' : '50%', paddingRight: isPortrait ? 0 : 10, marginBottom: isPortrait ? 20 : 0 }}>
           <View style={styles.table}>
             <View style={styles.tableHeader}><Text style={styles.tableHeaderCell}>TOP TRAMITES</Text></View>
             <View style={styles.tableHeader}>
@@ -374,7 +376,7 @@ function ResumenPage({ data, macroId }: { data: ProcessedData; macroId: string }
             ))}
           </View>
         </View>
-        <View style={{ width: '50%', paddingLeft: 10 }}>
+        <View style={{ width: isPortrait ? '100%' : '50%', paddingLeft: isPortrait ? 0 : 10 }}>
           <View style={styles.table}>
             <View style={styles.tableHeader}><Text style={styles.tableHeaderCell}>INTERACCIONES POR DIA</Text></View>
             <View style={styles.tableHeader}>
@@ -401,9 +403,11 @@ function ResumenPage({ data, macroId }: { data: ProcessedData; macroId: string }
 }
 
 // Graficos Page (as tables)
-function GraficosPage({ data, macroId }: { data: ProcessedData; macroId: string }) {
+function GraficosPage({ data, macroId, orientation }: { data: ProcessedData; macroId: string, orientation: "portrait" | "landscape" }) {
+  const isPortrait = orientation === "portrait";
+
   return (
-    <Page size="A4" orientation="landscape" style={styles.page}>
+    <Page size="A4" orientation={orientation} style={styles.page}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Reportes y arboles de efectividad RRSS - ANALISIS DE PERFORMANCE</Text>
         <Text style={styles.headerInfo}>Canal: {macroId.toUpperCase()} | Métricas de efectividad y horarios</Text>
@@ -411,9 +415,9 @@ function GraficosPage({ data, macroId }: { data: ProcessedData; macroId: string 
 
       <SectionHeader title="ARBOL EFECTIVIDAD" subtitle="Detalle cuantitativo de interacciones, señales y desempeño por franja horaria" />
 
-      <View style={styles.row}>
+      <View style={isPortrait ? { flexDirection: 'column' } : styles.row}>
         {/* Horas Prime */}
-        <View style={styles.colThird}>
+        <View style={isPortrait ? { width: '100%', marginBottom: 20 } : styles.colThird}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>HORAS PRIME (Top 10)</Text>
             <View style={styles.table}>
@@ -432,7 +436,7 @@ function GraficosPage({ data, macroId }: { data: ProcessedData; macroId: string 
         </View>
 
         {/* Calificacion */}
-        <View style={styles.colThird}>
+        <View style={isPortrait ? { width: '100%', marginBottom: 20 } : styles.colThird}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>CALIFICACION DE SERVICIO</Text>
             <View style={styles.table}>
@@ -455,42 +459,33 @@ function GraficosPage({ data, macroId }: { data: ProcessedData; macroId: string 
           </View>
         </View>
 
-        {/* Solicitudes */}
-        <View style={styles.colThird}>
-          {data.arbolEfectividad.solicitudes && data.arbolEfectividad.solicitudes.length > 0 ? (
+        {/* Solicitudes (if any) */}
+        {data.arbolEfectividad.solicitudes && (
+          <View style={isPortrait ? { width: '100%' } : styles.colThird}>
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>TOP SOLICITUDES</Text>
+              <Text style={styles.sectionTitle}>SOLICITUDES FRECUENTES</Text>
 
               {/* Grafico Solicitudes */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8, paddingHorizontal: 5 }}>
+              {/* <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8, paddingHorizontal: 5 }}>
                  <PdfPieChart data={data.arbolEfectividad.solicitudes.slice(0, 5).map(s => ({ name: s.nombre, value: s.cantidad }))} size={90} />
                  <PdfLegend data={data.arbolEfectividad.solicitudes.slice(0, 5).map(s => ({ name: s.nombre, value: s.cantidad }))} />
-              </View>
+              </View> */}
 
               <View style={styles.table}>
                 <View style={styles.tableHeader}>
-                  <Text style={[styles.tableHeaderCell, { width: "60%" }]}>Solicitud</Text>
-                  <Text style={[styles.tableHeaderCell, { width: "40%" }]}>Cantidad</Text>
+                  <Text style={[styles.tableHeaderCell, { width: "70%" }]}>Tramite</Text>
+                  <Text style={[styles.tableHeaderCell, { width: "30%" }]}>Cant.</Text>
                 </View>
                 {data.arbolEfectividad.solicitudes.map((s, idx) => (
                   <View key={idx} style={idx % 2 === 0 ? styles.tableRow : styles.tableRowAlt}>
-                    <Text style={[styles.tableCellLeft, { width: "60%" }]}>{s.nombre}</Text>
-                    <Text style={[styles.tableCell, { width: "40%" }]}>{s.cantidad.toLocaleString()}</Text>
+                    <Text style={[styles.tableCellLeft, { width: "70%" }]}>{s.nombre}</Text>
+                    <Text style={[styles.tableCell, { width: "30%" }]}>{s.cantidad.toLocaleString()}</Text>
                   </View>
                 ))}
               </View>
             </View>
-          ) : (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>TOP SOLICITUDES</Text>
-              <View style={styles.table}>
-                <View style={styles.tableRow}>
-                  <Text style={[styles.tableCell, { width: "100%" }]}>Sin datos de solicitudes</Text>
-                </View>
-              </View>
-            </View>
-          )}
-        </View>
+          </View>
+        )}
       </View>
 
       <View style={styles.footer}>
@@ -502,26 +497,28 @@ function GraficosPage({ data, macroId }: { data: ProcessedData; macroId: string 
   );
 }
 
-// Sub Tramites Page
-function SubTramitesPage({ data, macroId }: { data: ProcessedData; macroId: string }) {
+// Sub Trámites Page
+function SubTramitesPage({ data, macroId, orientation }: { data: ProcessedData; macroId: string, orientation: "portrait" | "landscape" }) {
+  const isPortrait = orientation === "portrait";
+
   return (
-    <Page size="A4" orientation="landscape" style={styles.page}>
+    <Page size="A4" orientation={orientation} style={styles.page}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Reportes y arboles de efectividad RRSS - DETALLE TECNICO</Text>
-        <Text style={styles.headerInfo}>Desglose cualitativo por sub-tramites y temas específicos</Text>
+        <Text style={styles.headerTitle}>Reportes y arboles de efectividad RRSS - DETALLE DE TRAMITES</Text>
+        <Text style={styles.headerInfo}>Análisis cualitativo de temas por servicio | Canal: {macroId.toUpperCase()}</Text>
       </View>
 
-      <SectionHeader title="SUB TRAMITES" subtitle="Distribución detallada por temas críticos en los trámites prioritarios" />
+      <SectionHeader title="SUB TRAMITES" subtitle="Distribución detallada de gestiones por categoría de servicio" />
 
       {data.subTramites.map((tramite, idx) => (
-        <View key={idx} wrap={false} style={{ marginBottom: 20, borderBottom: 1, borderBottomColor: '#eee', paddingBottom: 10 }}>
-           <View style={{ backgroundColor: AZUL_REY, padding: 4, marginBottom: 5 }}>
-              <Text style={{ color: WHITE, fontSize: 10, fontWeight: 'bold' }}>Tramite: {tramite.nombre}</Text>
+        <View key={idx} style={{ marginBottom: 25, borderBottom: 1, borderBottomColor: GRIS_CLARO, paddingBottom: 15 }} wrap={false}>
+           <View style={[styles.tableHeader, { backgroundColor: AZUL_REY, marginBottom: 5 }]}>
+              <Text style={{ color: WHITE, fontSize: 10, fontWeight: 'bold', padding: 5 }}>Tramite: {tramite.nombre}</Text>
            </View>
-           
-           <View style={{ flexDirection: 'row', minHeight: 250, width: '100%', marginVertical: 15 }}>
-              {/* Tabla Izquierda */}
-              <View style={{ width: '28%' }}>
+
+           <View style={[isPortrait ? { flexDirection: 'column' } : { flexDirection: 'row' }, { minHeight: isPortrait ? 0 : 250, width: '100%', marginVertical: 15 }]}>
+              {/* Tabla */}
+              <View style={{ width: isPortrait ? '100%' : '28%', marginBottom: isPortrait ? 15 : 0 }}>
                  <View style={styles.table}>
                     <View style={styles.tableHeader}>
                        <Text style={[styles.tableHeaderCell, { width: '75%', textAlign: 'left', paddingLeft: 5 }]}>Tema / Servicio</Text>
@@ -540,10 +537,10 @@ function SubTramitesPage({ data, macroId }: { data: ProcessedData; macroId: stri
                  </View>
               </View>
 
-              {/* Gráfico Derecha */}
-              <View style={{ width: '72%', paddingLeft: 25, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }}>
-                 <View style={{ width: 230, height: 230, justifyContent: 'center', alignItems: 'center' }}>
-                    <PdfPieChart data={tramite.temas.map(t => ({ name: t.tema, value: t.cantidad }))} size={220} />
+              {/* Gráfico */}
+              <View style={{ width: isPortrait ? '100%' : '72%', paddingLeft: isPortrait ? 0 : 25, flexDirection: 'row', alignItems: 'center', justifyContent: isPortrait ? 'center' : 'flex-start' }}>
+                 <View style={{ width: isPortrait ? 250 : 230, height: isPortrait ? 250 : 230, justifyContent: 'center', alignItems: 'center' }}>
+                    <PdfPieChart data={tramite.temas.map(t => ({ name: t.tema, value: t.cantidad }))} size={isPortrait ? 240 : 220} />
                  </View>
                  <PdfLegend data={tramite.temas.map(t => ({ name: t.tema, value: t.cantidad }))} />
               </View>
@@ -560,32 +557,29 @@ function SubTramitesPage({ data, macroId }: { data: ProcessedData; macroId: stri
       <View style={styles.footer}>
         <Text style={styles.footerText}>Reportes y arboles de efectividad RRSS</Text>
         <Text style={styles.supportText}>Para soporte escribir a acascantem@netcom.com.pa</Text>
-        <Text style={styles.footerText}>Pagina 3</Text>
+        <Text style={styles.footerText}>Proyecto Corporativo</Text>
       </View>
     </Page>
   );
 }
 
-function ReportDocument({ data, macroId }: { data: ProcessedData; macroId: string }) {
-  return (
-    <Document>
-      <ResumenPage data={data} macroId={macroId} />
-      <GraficosPage data={data} macroId={macroId} />
-      <SubTramitesPage data={data} macroId={macroId} />
-    </Document>
-  );
-}
+// Main Document Component
+const ReportDocument = ({ data, macroId, orientation = "landscape" }: { data: ProcessedData, macroId: string, orientation?: "portrait" | "landscape" }) => (
+  <Document title={`Reporte_${macroId}_${new Date().toLocaleDateString()}`}>
+    <ResumenPage data={data} macroId={macroId} orientation={orientation} />
+    <GraficosPage data={data} macroId={macroId} orientation={orientation} />
+    <SubTramitesPage data={data} macroId={macroId} orientation={orientation} />
+  </Document>
+);
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const body = await request.json();
-    const { data, macroId }: { data: ProcessedData; macroId: string } = body;
+    const { data, macroId, orientation = "landscape" } = await req.json();
 
     if (!data) {
       return NextResponse.json({ error: "No hay datos para exportar" }, { status: 400 });
     }
 
-    // eslint-disable-next-line react-hooks/error-boundaries
     const pdfDoc = <ReportDocument data={data} macroId={macroId} />;
     const pdfBuffer = await pdf(pdfDoc).toBuffer();
 

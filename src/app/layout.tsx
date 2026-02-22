@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Z.ai Team" }],
   icons: {
-    icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%230D4F8B%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M12 22v-3%22/><path d=%22M5.11 11.12a8 8 0 0 1 13.78 0%22/><path d=%22M5.5 13a4 4 0 1 0 5 0%22/><path d=%22M13.5 13a4 4 0 1 0 5 0%22/><path d=%22M12 13V8%22/><path d=%22M12 8a3 3 0 1 0-3-3%22/><path d=%22M12 8a3 3 0 1 1 3-3%22/></svg>',
+    icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%230D4F8B%22 stroke-width=%222.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M3 3v18h18%22/><path d=%22M7 16v-4%22/><path d=%22M11 16V9%22/><path d=%22M15 16V5%22/><path d=%22M19 16v-7%22/></svg>',
   },
   openGraph: {
     title: "ARBOLES DE EFECTIVIDAD",

@@ -181,14 +181,18 @@ export default function ExcelMacroRunner() {
     }
   }, [file, selectedMacro, setProgress]);
 
-  const exportToPDF = useCallback(async () => {
+  const exportToPDF = useCallback(async (orientation: "portrait" | "landscape" = "landscape") => {
     if (!processedData || !selectedMacro) return;
 
     try {
       const response = await fetch("/api/export-pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: processedData, macroId: selectedMacro }),
+        body: JSON.stringify({ 
+          data: processedData, 
+          macroId: selectedMacro,
+          orientation 
+        }),
       });
 
       if (!response.ok) throw new Error("Error al exportar PDF");
@@ -197,7 +201,7 @@ export default function ExcelMacroRunner() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Reporte_${selectedMacro}_${new Date().toISOString().split("T")[0]}.pdf`;
+      a.download = `Reporte_${selectedMacro}_${orientation}_${new Date().toISOString().split("T")[0]}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -268,14 +272,26 @@ export default function ExcelMacroRunner() {
           {/* Export PDF button */}
           {processedData && (
             <div className="ml-auto flex items-center gap-2">
-              <Button
-                size="sm"
-                onClick={exportToPDF}
-                className="gap-2 bg-gradient-to-r from-[#00BFA5] to-[#00897B] hover:opacity-90 text-white shadow-md"
-              >
-                <Download className="w-4 h-4" />
-                Exportar PDF
-              </Button>
+              <div className="flex bg-gradient-to-r from-[#00BFA5] to-[#00897B] p-1 rounded-lg shadow-md">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-white hover:bg-[#FF6D00] hover:text-white flex items-center gap-2 px-3 border-r border-white/20 rounded-r-none"
+                  onClick={() => exportToPDF("landscape")}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                  Exportar Horizontal
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-white hover:bg-[#FF6D00] hover:text-white flex items-center gap-2 px-3 rounded-l-none"
+                  onClick={() => exportToPDF("portrait")}
+                >
+                  <Table2 className="w-4 h-4" />
+                  Exportar Vertical
+                </Button>
+              </div>
             </div>
           )}
         </div>
