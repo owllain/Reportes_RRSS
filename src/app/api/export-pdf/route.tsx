@@ -580,7 +580,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No hay datos para exportar" }, { status: 400 });
     }
 
-    const pdfDoc = <ReportDocument data={data} macroId={macroId} />;
+    const pdfDoc = <ReportDocument data={data} macroId={macroId} orientation={orientation} />;
     const pdfBuffer = await pdf(pdfDoc).toBuffer();
 
     return new NextResponse(pdfBuffer, {
